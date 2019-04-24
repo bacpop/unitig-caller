@@ -30,7 +30,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='unitig-caller',
+    name='unitig_caller',
     version=find_version("pyseer/__init__.py"),
     description='unitig-caller: wrapper around mantis to detect presence of sequence elements',
     long_description=long_description,
@@ -47,10 +47,10 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     keywords='gwas bacteria k-mer unitig',
-    packages=['unitig-caller'],
+    packages=['unitig_caller'],
     entry_points={
         "console_scripts": [
-            'unitig-caller = unitig-caller.__main__:main'
+            'unitig_caller = unitig_caller.__main__:main'
             ]
     }
 )

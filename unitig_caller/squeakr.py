@@ -21,7 +21,7 @@ def check_squeakr_version(exe='squeakr'):
     for line in iter(p.stdout.readline, ''):
         if line != '':
             version_match = re.search(r"^version (\d+)\.(\d+)$", line.rstrip().decode())
-            version = version_match.group(1)
+            version = int(version_match.group(1))
             break
 
     return version
@@ -95,14 +95,18 @@ def run_squeakr(fastq_in, out_file, exact=True, kmer_size=28, count_cutoff=1,
         squeakr_cmd += " -e"
     squeakr_cmd += " -o " + out_file + " " + fastq_in
 
-    subprocess.run(squeakr_cmd, shell=True, check=True)
+    subprocess.run(squeakr_cmd,
+                   stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL,
+                   shell=True,
+                   check=True)
 
 def squeakr_multi_wrapper(names, overwrite, squeakr_options):
     """Turns fasta into fastq, runs squeakr, cleans up tmp files.
 
     Args:
         names (tuple)
-            Tuple of strings (Location of input file, Name for output)
+            Tuple of strings (Name for output, Location of input file)
         overwrite (bool)
             Overwrite output
         squeakr_options (dict)
@@ -111,7 +115,7 @@ def squeakr_multi_wrapper(names, overwrite, squeakr_options):
         version (int)
             Major version of squeakr. Zero if failure
     """
-    fasta_in, output_name = names
+    output_name, fasta_in = names
     tmp_fastq_file = output_name + "/" + output_name + ".fastq"
     output_file = output_name + "/" + output_name + ".squeakr"
     if overwrite or not os.path.isfile(output_file):
@@ -119,7 +123,7 @@ def squeakr_multi_wrapper(names, overwrite, squeakr_options):
             try:
                 os.makedirs(output_name)
             except OSError:
-                sys.stderr.write("Cannot create output directory" + output_name + "\n")
+                sys.stderr.write("Cannot create output directory " + output_name + "\n")
                 sys.exit(1)
 
         fasta_to_fastq(fasta_in, tmp_fastq_file)

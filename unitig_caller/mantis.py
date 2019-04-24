@@ -24,9 +24,9 @@ def check_mantis_version(exe='mantis'):
     for line in iter(p.stdout.readline, ''):
         if line != '':
             version_match = re.search(r"^mantis (\d+)\.(\d+)\.(\d+)$", line.rstrip().decode())
-            major_version = version_match.group(1)
-            minor_version = version_match.group(2)
-            patch_version = version_match.group(3)
+            major_version = int(version_match.group(1))
+            minor_version = int(version_match.group(2))
+            patch_version = int(version_match.group(3))
             break
 
     return (major_version, minor_version, patch_version)
@@ -55,7 +55,7 @@ def run_mantis_build(squeakr_files, out_dir, log_slots=22, mantis_exe='mantis'):
 
     subprocess.run(mantis_cmd, shell=True, check=True)
 
-def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=True, mantis_exe='mantis'):
+def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=False, mantis_exe='mantis'):
     """Runs mantis mst on a built index.
 
     Args:
@@ -68,15 +68,17 @@ def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=True, mantis_exe='man
         delete_RRR (bool)
             Remove the previous color class RRR representation (-d)
 
-            [default = True]
+            [default = False]
         mantis_exe (str)
             Location of mantis executable
 
             [deafault = 'mantis']
     """
     mantis_cmd = mantis_exe + " mst"
-    mantis_cmd += " -p " + mantis_dir
+    mantis_cmd += " -p " + mantis_dir + "/"
     mantis_cmd += " -t " + str(num_threads)
+
+    # Note, delete will fail without trailing slash
     if delete_RRR:
         mantis_cmd += " -d"
     else:
@@ -98,7 +100,7 @@ def run_mantis_query(query_file, mantis_index, mantis_exe='mantis'):
 
             [deafault = 'mantis']
     """
-    (query_out_handle, query_out_file) = tempfile.mkstemp()
+    query_out_file = tempfile.mkstemp()[1]
 
     mantis_cmd = mantis_exe + " query"
     mantis_cmd += " -p " + mantis_index
@@ -109,20 +111,21 @@ def run_mantis_query(query_file, mantis_index, mantis_exe='mantis'):
 
     max_match = 0
     samples = []
-    for query_line in query_out_handle:
-        new_seq = re.search(r"^seq\d\t(\d+)", query_line.rstrip())
-        if new_seq:
-            yield(samples)
-            samples = []
-            max_match = new_seq.group(1)
-        else:
-            (squeakr_file, matches) = query_line.rstrip().split("\t")
-            if matches == max_match:
-                sample_name = re.search(r"\/(.+?)\.squeakr$", squeakr_file)
-                if sample_name:
-                    samples.append(sample_name.group(1))
-                else:
-                    sys.stderr.write("Error matching sample name in " + squeakr_file + "\n")
+    with open(query_out_file, 'r') as query_file:
+        for query_line in query_file:
+            new_seq = re.search(r"^seq\d\t(\d+)", query_line.rstrip())
+            if new_seq:
+                yield(samples)
+                samples = []
+                max_match = new_seq.group(1)
+            else:
+                (squeakr_file, matches) = query_line.rstrip().split("\t")
+                if matches == max_match:
+                    sample_name = re.search(r"\/(.+?)\.squeakr$", squeakr_file)
+                    if sample_name:
+                        samples.append(sample_name.group(1))
+                    else:
+                        sys.stderr.write("Error matching sample name in " + squeakr_file + "\n")
 
     yield(samples)
     os.remove(query_out_file)

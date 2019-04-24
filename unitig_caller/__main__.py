@@ -2,7 +2,7 @@
 
 '''Wrapper around mantis to detect presence of sequence elements'''
 
-import sys
+import os, sys
 
 import tempfile
 from multiprocessing import Pool
@@ -25,11 +25,20 @@ def get_options():
     parser = argparse.ArgumentParser(description=description,
                                      prog='unitig-caller')
 
-    parser.add_argument('--mode',
-                        choices=['index', 'call'],
-                        required=True,
-                        help='\'index\' sequences, or \'call\' on '
-                             'an indexed dataset.')
+    modeGroup = parser.add_argument_group('Mode of operation')
+    mode = modeGroup.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--index',
+                        action='store_true',
+                        default=False,
+                        help='Index sequences, before calling.')
+    mode.add_argument('--call',
+                        action='store_true',
+                        default=False,
+                        help='Make calls from an indexed dataset.')
+    mode.add_argument('--simple',
+                        action='store_true',
+                        default=False,
+                        help='Use string matching to make calls.')
 
     io = parser.add_argument_group('Input/output')
     io.add_argument('--strains',
@@ -49,18 +58,19 @@ def get_options():
     other.add_argument('--cpus',
                         type=int,
                         default=1,
-                        help='Number of CPUs to use.')
+                        help='Number of CPUs to use. '
+                             '[default = 1]')
     other.add_argument('--overwrite',
                         action='store_true',
                         default=False,
                         help='Overwrite existing output')
     other.add_argument('--squeakr',
                         default='squeakr',
-                        help='Location of squeakr executable'
+                        help='Location of squeakr executable '
                              '[default = squeakr]')
     other.add_argument('--mantis',
                         default='mantis',
-                        help='Location of mantis executable'
+                        help='Location of mantis executable '
                              '[default = mantis]')
     other.add_argument('--version', action='version',
                        version='%(prog)s '+__version__)
@@ -73,13 +83,13 @@ def main():
 
     mantis_major, mantis_minor, mantis_patch = check_mantis_version(options.mantis)
     if (mantis_major == 0 and mantis_minor < 2):
-        sys.stderr.write("Requires mantis version 0.2 or higher")
+        sys.stderr.write("Requires mantis version 0.2 or higher\n")
 
-    if options.mode == "index":
+    if options.index:
         sys.stderr.write("Creating counts with squeakr\n")
 
         if (check_squeakr_version(options.squeakr) < 1):
-            sys.stderr.write("Requires squeakr version 1.0 or higher")
+            sys.stderr.write("Requires squeakr version 1.0 or higher\n")
 
         squeakr_options = {'overwrite': options.overwrite,
                            'exact': True,
@@ -96,6 +106,7 @@ def main():
                 (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
                 strains_in.append((strain_name, strain_fasta))
                 output_list.write(strain_name + "/" + strain_name + ".squeakr\n")
+        output_list.file.flush()
 
         with Pool(processes=options.cpus) as pool:
             pool.map(partial(squeakr_multi_wrapper,
@@ -103,14 +114,14 @@ def main():
                              squeakr_options=squeakr_options),
                      strains_in)
 
+        sys.stderr.write("Building mantis index\n")
+        run_mantis_build(output_list.name, options.output, log_slots=22, mantis_exe=options.mantis)
+        run_mantis_index(options.output, options.cpus, delete_RRR=False, mantis_exe=options.mantis)
+
         output_list.close()
 
-        sys.stderr.write("Building mantis index\n")
-        run_mantis_build(output_list, options.prefix, log_slots=22, mantis_exe=options.mantis)
-        run_mantis_index(options.prefix, options.cpus, delete_RRR=True, mantis_exe=options.mantis)
-
-    elif options.mode == "call":
-        sys.stderr.write("Running mantis queries")
+    elif options.call:
+        sys.stderr.write("Running mantis queries\n")
 
         unitig_list_file = tempfile.NamedTemporaryFile('w')
         unitigs = []
@@ -120,17 +131,23 @@ def main():
                 unitig_fields = unitig_line.rstrip().split("\t")
                 unitigs.append(unitig_fields[0])
                 unitig_list_file.write(unitig_fields[0] + "\n")
+        unitig_list_file.file.flush()
 
         # Run query and format output as pyseer k-mers/unitigs
-        with open(options.prefix + "_unitigs.txt", 'w') as call_output:
-            for unitig, samples in zip(unitigs, run_mantis_query(unitig_list_file,
-                                                                 options.mantis_index,
+        mantis_index = os.path.join(options.mantis_index, '')
+        with open(options.output + "_unitigs.txt", 'w') as call_output:
+            for unitig, samples in zip(unitigs, run_mantis_query(unitig_list_file.name,
+                                                                 mantis_index,
                                                                  options.mantis)):
                 if len(samples) > 0:
                     out_array = [unitig] + ["|"] + [x + ":1" for x in samples]
                     call_output.write(" ".join(out_array) + "\n")
 
         unitig_list_file.close()
+
+    elif options.simple:
+        # call c++ code
+        sys.stderr.write("TODO\n")
 
     sys.exit(0)
 
