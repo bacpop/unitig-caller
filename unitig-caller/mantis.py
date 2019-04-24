@@ -5,6 +5,7 @@
 import os, sys
 import subprocess
 import re
+import tempfile
 
 def check_mantis_version(exe='mantis'):
     """Checks that mantis can be run, and its version.
@@ -55,7 +56,7 @@ def run_mantis_build(squeakr_files, out_dir, log_slots=22, mantis_exe='mantis'):
     subprocess.run(mantis_cmd, shell=True, check=True)
 
 def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=True, mantis_exe='mantis'):
-    """Runs mantis mst a built index.
+    """Runs mantis mst on a built index.
 
     Args:
         mantis_dir (str)
@@ -82,3 +83,46 @@ def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=True, mantis_exe='man
         mantis_cmd += " -k"
 
     subprocess.run(mantis_cmd, shell=True, check=True)
+
+def run_mantis_query(query_file, mantis_index, mantis_exe='mantis'):
+    """Runs mantis call. Returns iterable with strains
+    for each input sequence.
+
+    Args:
+        query_file (str)
+            Location of input sequences
+        mantis_index (str)
+            Location of index to search
+        mantis_exe (str)
+            Location of mantis executable
+
+            [deafault = 'mantis']
+    """
+    (query_out_handle, query_out_file) = tempfile.mkstemp()
+
+    mantis_cmd = mantis_exe + " query"
+    mantis_cmd += " -p " + mantis_index
+    mantis_cmd += " -o " + query_out_file
+    mantis_cmd += " " + query_file
+
+    subprocess.run(mantis_cmd, shell=True, check=True)
+
+    max_match = 0
+    samples = []
+    for query_line in query_out_handle:
+        new_seq = re.search(r"^seq\d\t(\d+)", query_line.rstrip())
+        if new_seq:
+            yield(samples)
+            samples = []
+            max_match = new_seq.group(1)
+        else:
+            (squeakr_file, matches) = query_line.rstrip().split("\t")
+            if matches == max_match:
+                sample_name = re.search(r"\/(.+?)\.squeakr$", squeakr_file)
+                if sample_name:
+                    samples.append(sample_name.group(1))
+                else:
+                    sys.stderr.write("Error matching sample name in " + squeakr_file + "\n")
+
+    yield(samples)
+    os.remove(query_out_file)

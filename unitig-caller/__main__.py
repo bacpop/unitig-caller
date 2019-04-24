@@ -2,7 +2,7 @@
 
 '''Wrapper around mantis to detect presence of sequence elements'''
 
-import os, sys
+import sys
 
 import tempfile
 from multiprocessing import Pool
@@ -16,6 +16,7 @@ from .squeakr import squeakr_multi_wrapper
 from .mantis import check_mantis_version
 from .mantis import run_mantis_build
 from .mantis import run_mantis_index
+from .mantis import run_mantis_query
 
 def get_options():
     import argparse
@@ -38,6 +39,10 @@ def get_options():
     io.add_argument('--output',
                     default='mantis_index',
                     help='Prefix for output')
+    io.add_argument('--mantis-index',
+                    default='mantis_index',
+                    help='Directory containing mantis index '
+                         '(produced by index mode)')
 
 
     other = parser.add_argument_group('Other')
@@ -105,12 +110,27 @@ def main():
         run_mantis_index(options.prefix, options.cpus, delete_RRR=True, mantis_exe=options.mantis)
 
     elif options.mode == "call":
+        sys.stderr.write("Running mantis queries")
 
-    """
-    /nfs/users/nfs_j/jl11/pathogen_nfs/large_software/bin/mantis query -p full_test/ -o query.res test_search.fa
+        unitig_list_file = tempfile.NamedTemporaryFile('w')
+        unitigs = []
+        with open(options.unitigs, 'r') as unitig_file:
+            unitig_file.readline() # header
+            for unitig_line in unitig_file:
+                unitig_fields = unitig_line.rstrip().split("\t")
+                unitigs.append(unitig_fields[0])
+                unitig_list_file.write(unitig_fields[0] + "\n")
 
-    compare to unitigs.txt
-    comm -3 <(sed '3q;d' unitig_results.txt | cut -d " " -f 4- | sed 's/:1//g' | tr ' ' '\n' | sort) <(awk '$2 == 15 {print $1}' query.res| sed '1d' | cut -d "/" -f 2 | sed 's/#/_/' | sort) """
+        # Run query and format output as pyseer k-mers/unitigs
+        with open(options.prefix + "_unitigs.txt", 'w') as call_output:
+            for unitig, samples in zip(unitigs, run_mantis_query(unitig_list_file,
+                                                                 options.mantis_index,
+                                                                 options.mantis)):
+                if len(samples) > 0:
+                    out_array = [unitig] + ["|"] + [x + ":1" for x in samples]
+                    call_output.write(" ".join(out_array) + "\n")
+
+        unitig_list_file.close()
 
     sys.exit(0)
 

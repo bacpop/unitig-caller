@@ -90,6 +90,7 @@ def run_squeakr(fastq_in, out_file, exact=True, kmer_size=28, count_cutoff=1,
     squeakr_cmd += " -k " + str(kmer_size)
     squeakr_cmd += " -s " + str(log_slots)
     squeakr_cmd += " -t " + str(num_threads)
+    squeakr_cmd += " -c " + str(count_cutoff)
     if exact:
         squeakr_cmd += " -e"
     squeakr_cmd += " -o " + out_file + " " + fastq_in
