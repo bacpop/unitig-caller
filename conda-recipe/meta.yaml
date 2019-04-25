@@ -1,0 +1,44 @@
+{% set version = "0.1.0" %}
+{% set name = "unitig-caller" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/johnlees/{{ name|lower }}/archive/v{{ version }}.tar.gz
+  sha256: TODO
+
+build:
+  number: 0
+  skip: True #  [osx]
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv"
+  entry_points:
+    - unitig_caller = unitig_caller.__main__:main
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - python >=3
+  host:
+    - cmake
+    - pybind11
+    - pthread-stubs
+  run:
+    - pthread-stubs
+    - mantis >=0.2.0
+    - squeakr >=1.0
+
+test:
+  imports:
+    - unitig_caller
+    - map_strings
+
+  commands:
+    - unitig_caller --help
+
+about:
+  home: https://github.com/johnlees/unitig-caller
+  license: Apache-2.0
+  license_family: APACHE
+  summary: 'Determines presence/absence of sequence elements from bacterial sequence data'
