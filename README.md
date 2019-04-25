@@ -1,8 +1,13 @@
 # unitig-caller
-A wrapper around mantis to determine unitig presence/absence
+Determines presence/absence of sequence elements in bacterial sequence
+data. Currently uses assemblies as inputs (reads also possible by changing
+some options).
 
 For small numbers of queries use `--simple`. For larger numbers
 (e.g. whole genome) use `--index` followed by `--call`.
+
+Simple mode uses string matching after loading seqs into main memory.
+Index/call mode is a wrapper around squeakr and mantis.
 
 ## Install
 Requires [squeakr](https://github.com/splatlab/squeakr) version 1.0

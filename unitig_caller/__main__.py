@@ -8,6 +8,8 @@ import tempfile
 from multiprocessing import Pool
 from functools import partial
 
+import map_strings
+
 from .__init__ import __version__
 
 from .squeakr import check_squeakr_version
@@ -146,8 +148,24 @@ def main():
         unitig_list_file.close()
 
     elif options.simple:
-        # call c++ code
-        sys.stderr.write("TODO\n")
+        # Read input into lists, as in 'index' and 'call'
+        names_in = []
+        fasta_in = []
+        with open(options.strains, 'r') as strain_file:
+            for strain_line in strain_file:
+                (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
+                names_in.append(strain_name)
+                fasta_in.append(strain_fasta)
+
+        unitigs = []
+        with open(options.unitigs, 'r') as unitig_file:
+            unitig_file.readline() # header
+            for unitig_line in unitig_file:
+                unitig_fields = unitig_line.rstrip().split("\t")
+                unitigs.append(unitig_fields[0])
+
+        # call c++ code to map
+        map_strings.call(fasta_in, names_in, unitigs, options.output + "_unitigs.txt", options.cpus)
 
     sys.exit(0)
 
