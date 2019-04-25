@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/johnlees/{{ name|lower }}/archive/v{{ version }}.tar.gz
-  sha256: TODO
+  sha256: e22666f692da64fc5f5dd631dbd7d36c3fba0a97726e50eb9f602592ab1f1d58
 
 build:
   number: 0

@@ -2,4 +2,4 @@
 
 '''Wrapper around mantis to detect presence of sequence elements'''
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'

@@ -113,7 +113,7 @@ def run_mantis_query(query_file, mantis_index, mantis_exe='mantis'):
     samples = []
     with open(query_out_file, 'r') as query_file:
         for query_line in query_file:
-            new_seq = re.search(r"^seq\d\t(\d+)", query_line.rstrip())
+            new_seq = re.search(r"^seq\d+\t(\d+)", query_line.rstrip())
             if new_seq:
                 if max_match > 0:
                     yield(samples)
