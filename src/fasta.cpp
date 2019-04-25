@@ -65,25 +65,22 @@ Fasta::Fasta(const std::string& obj_name, const std::string& filename)
 }
 
 // Simple presence/absence test
-bool Fasta::hasSeq(const std::string& search)
+bool Fasta::hasSeq(const std::string& search) const
 {
-   bool found = 0;
-
    // Search each sequence in fasta
-   for (std::vector<std::string>::iterator it = Fasta::sequences.begin(); it != Fasta::sequences.end(); ++it)
+   bool found = 0;
+   for (auto it = Fasta::sequences.begin(); it != Fasta::sequences.end(); ++it)
    {
-      size_t hit_position = ;
       if (it->find(search) != std::string::npos)
       {
          found = 1;
          break;
       }
    }
-
    return found;
 }
 
-std::string rev_comp(std::string& seq)
+std::string rev_comp(const std::string& seq)
 {
    std::string rev_seq(seq);
    auto lambda = [](const char c)

@@ -12,6 +12,7 @@
 #include <string>
 #include <iterator>
 #include <vector>
+#include <queue>
 #include <functional>
 #include <future>
 #include <thread>
@@ -34,12 +35,12 @@ const std::string VERSION = "0.1.0";
 
 // Function headers
 // map_strings.cpp
-void call_strings(std::vector<std::string>& assembly_list,
-                  std::vector<std::string>& assembly_names,
-                  std::vector<std::string>& query_list,
-                  std::string& output_file,
-                  size_t num_threads = 1);
-std::vector<std:string> seq_search(std::string& query, std::vector<Fasta>& sequences, size_t start, size_t end);
+void call_strings(const std::vector<std::string>& assembly_list,
+                  const std::vector<std::string>& assembly_names,
+                  const std::vector<std::string>& query_list,
+                  const std::string& output_file,
+                  const size_t num_threads = 1);
+std::vector<std::string> seq_search(const std::string& query, const std::vector<Fasta>& sequences, const size_t start, const size_t end);
 
 // map_bindings.cpp
 int py_call_strings(std::vector<std::string> assembly_list,

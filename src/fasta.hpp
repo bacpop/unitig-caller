@@ -6,10 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <stdexcept>
 #include <vector>
 #include <iterator>
-#include <mutex>
+#include <algorithm>
 
 // Contains sequences and contig names
 class Fasta
@@ -18,10 +17,8 @@ class Fasta
       // Initialisation
       Fasta(const std::string& obj_name, const std::string& file);
 
-      // Complex operations
-      bool hasSeq(const std::string& search);
-
       // nonmodifying operations
+      bool hasSeq(const std::string& search) const;
       std::string get_name() const { return name; }
       static bool compareFasta(Fasta lhs, Fasta rhs) { return (lhs.name < rhs.name); }
 
@@ -33,4 +30,4 @@ class Fasta
       std::string name;
 };
 
-std::string rev_comp(std::string& seq);
+std::string rev_comp(const std::string& seq);

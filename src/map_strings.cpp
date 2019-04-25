@@ -7,11 +7,11 @@
 
 #include "map_strings.hpp"
 
-void call_strings(std::vector<std::string>& assembly_list,
-                  std::vector<std::string>& assembly_names,
-                  std::vector<std::string>& query_list,
-                  std::string& output_file,
-                  size_t num_threads)
+void call_strings(const std::vector<std::string>& assembly_list,
+                  const std::vector<std::string>& assembly_names,
+                  const std::vector<std::string>& query_list,
+                  const std::string& output_file,
+                  const size_t num_threads)
 {
    assert(num_threads >= 1);
 
@@ -35,7 +35,7 @@ void call_strings(std::vector<std::string>& assembly_list,
 
    size_t start = 0;
    std::vector<size_t> start_points;
-   for (unsigned int thread_idx = 0; thread_idx < threads; ++thread_idx) // Loop over threads
+   for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx) // Loop over threads
    {
       start_points.push_back(start);
 
@@ -56,34 +56,42 @@ void call_strings(std::vector<std::string>& assembly_list,
    // over all unitig queries (and their reverse complements)
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
-      for (unsigned int thread_idx = 0; thread_idx < threads; ++thread_idx)
+      for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
       {
          // Set the thread off
          map_threads.push(std::async(std::launch::async, seq_search,
                                                          std::cref(*unitig_it),
-                                                         std::cref(sequences)
+                                                         std::cref(sequences),
                                                          start_points[thread_idx],
                                                          start_points[thread_idx + 1]));
       }
 
-      pres_ofs << *unitigs_it << " |";
+      // Get results from thread
+      std::vector<std::string> present;
       while (!map_threads.empty())
       {
-         std::vector<std::string> present = distance_calculations.front().get();
-         distance_calculations.pop();
+         std::vector<std::string> thread_present = map_threads.front().get();
+         map_threads.pop();
 
+         present.insert(present.end(), thread_present.begin(), thread_present.end());
+      }
+
+      // Print results if found
+      if (present.size() > 0)
+      {
+         pres_ofs << *unitig_it << " |";
          for (auto pres_it = present.begin() ; pres_it < present.end(); ++pres_it)
          {
             pres_ofs << " " << *pres_it << ":1";
          }
+         pres_ofs << std::endl;
       }
-      os << std::endl;
    }
 
    std::cerr << "Done." << std::endl;
 }
 
-std::vector<std:string> seq_search(std::string& query, std::vector<Fasta>& sequences, size_t start, size_t end)
+std::vector<std::string> seq_search(const std::string& query, const std::vector<Fasta>& sequences, const size_t start, const size_t end)
 {
    std::string rev_query = rev_comp(query);
    std::vector<std::string> present;

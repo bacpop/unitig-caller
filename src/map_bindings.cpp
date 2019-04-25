@@ -24,7 +24,7 @@ int py_call_strings(std::vector<std::string> assembly_list,
     // Here done automatically with pybind11/stl.h
 
     // call pure C++ function
-    call_strings(assembly_list, assembly_names, query_list, output_file, num_threads)
+    call_strings(assembly_list, assembly_names, query_list, output_file, num_threads);
 
     // return success
     return 1;

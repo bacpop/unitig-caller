@@ -115,12 +115,13 @@ def run_mantis_query(query_file, mantis_index, mantis_exe='mantis'):
         for query_line in query_file:
             new_seq = re.search(r"^seq\d\t(\d+)", query_line.rstrip())
             if new_seq:
-                yield(samples)
-                samples = []
-                max_match = new_seq.group(1)
+                if max_match > 0:
+                    yield(samples)
+                    samples = []
+                max_match = int(new_seq.group(1))
             else:
                 (squeakr_file, matches) = query_line.rstrip().split("\t")
-                if matches == max_match:
+                if int(matches) == max_match:
                     sample_name = re.search(r"\/(.+?)\.squeakr$", squeakr_file)
                     if sample_name:
                         samples.append(sample_name.group(1))
