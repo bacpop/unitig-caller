@@ -23,7 +23,7 @@ from .mantis import run_mantis_query
 def get_options():
     import argparse
 
-    description = 'Call unitigs in a population'
+    description = 'Call unitigs in a population dataset'
     parser = argparse.ArgumentParser(description=description,
                                      prog='unitig-caller')
 
@@ -32,15 +32,15 @@ def get_options():
     mode.add_argument('--index',
                         action='store_true',
                         default=False,
-                        help='Index sequences, before calling.')
+                        help='Index sequences, before calling')
     mode.add_argument('--call',
                         action='store_true',
                         default=False,
-                        help='Make calls from an indexed dataset.')
+                        help='Make calls from an indexed dataset')
     mode.add_argument('--simple',
                         action='store_true',
                         default=False,
-                        help='Use string matching to make calls.')
+                        help='Use string matching to make calls')
 
     io = parser.add_argument_group('Input/output')
     io.add_argument('--strains',
@@ -49,18 +49,42 @@ def get_options():
                     help='List of unitigs to call')
     io.add_argument('--output',
                     default='mantis_index',
-                    help='Prefix for output')
+                    help='Prefix for output '
+                         '[default = \'mantis_index\']')
     io.add_argument('--mantis-index',
                     default='mantis_index',
                     help='Directory containing mantis index '
-                         '(produced by index mode)')
+                         '(produced by index mode) '
+                         '[default = \'mantis_index\']')
 
+    mantis = parser.add_argument_group('mantis/squeakr options')
+    mantis.add_argument('--approximate',
+                        action='store_true',
+                        default=False,
+                        help='Use approximate count mode '
+                             '[default = exact]')
+    mantis.add_argument('--kmer-size',
+                        type=int,
+                        default=28,
+                        help='K-mer size for counts '
+                             '[default = 28]')
+    mantis.add_argument('--count-cutoff',
+                        type=int,
+                        default=1,
+                        help='Minimum k-mer count to be included '
+                             '[default = 1]')
+    mantis.add_argument('--log-slots',
+                        type=int,
+                        default=22,
+                        help='Starting log(number of count slots). '
+                             'Automatically increased if necessary '
+                             '[default = 22]')
 
     other = parser.add_argument_group('Other')
     other.add_argument('--cpus',
                         type=int,
                         default=1,
-                        help='Number of CPUs to use. '
+                        help='Number of CPUs to use '
                              '[default = 1]')
     other.add_argument('--overwrite',
                         action='store_true',
@@ -94,11 +118,11 @@ def main():
             sys.stderr.write("Requires squeakr version 1.0 or higher\n")
 
         squeakr_options = {'overwrite': options.overwrite,
-                           'exact': True,
-                           'kmer_size': 28,
-                           'count_cutoff': 1,
-                           'log_slots': 22,
-                           'num_threads': 1,
+                           'exact': not options.approximate,
+                           'kmer_size': options.kmer_size,
+                           'count_cutoff': options.count_cutoff,
+                           'log_slots': options.log_slots,
+                           'num_threads': 1, # a pool is used instead
                            'squeakr_exe': options.squeakr}
 
         strains_in = []

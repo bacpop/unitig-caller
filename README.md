@@ -84,29 +84,41 @@ Which will write to `calls_unitigs.txt` as in simple mode.
 ```
 usage: unitig-caller [-h] (--index | --call | --simple) [--strains STRAINS]
                      [--unitigs UNITIGS] [--output OUTPUT]
-                     [--mantis-index MANTIS_INDEX] [--cpus CPUS] [--overwrite]
+                     [--mantis-index MANTIS_INDEX] [--approximate]
+                     [--kmer-size KMER_SIZE] [--count-cutoff COUNT_CUTOFF]
+                     [--log-slots LOG_SLOTS] [--cpus CPUS] [--overwrite]
                      [--squeakr SQUEAKR] [--mantis MANTIS] [--version]
 
-Call unitigs in a population
+Call unitigs in a population dataset
 
 optional arguments:
   -h, --help            show this help message and exit
 
 Mode of operation:
-  --index               Index sequences, before calling.
-  --call                Make calls from an indexed dataset.
-  --simple              Use string matching to make calls.
+  --index               Index sequences, before calling
+  --call                Make calls from an indexed dataset
+  --simple              Use string matching to make calls
 
 Input/output:
   --strains STRAINS     List of strains to index
   --unitigs UNITIGS     List of unitigs to call
-  --output OUTPUT       Prefix for output
+  --output OUTPUT       Prefix for output [default = 'mantis_index']
   --mantis-index MANTIS_INDEX
                         Directory containing mantis index (produced by index
-                        mode)
+                        mode) [default = 'mantis_index']
+
+mantis/squeakr options:
+  --approximate         Use approximate count mode [default = exact]
+  --kmer-size KMER_SIZE
+                        K-mer size for counts [default = 28]
+  --count-cutoff COUNT_CUTOFF
+                        Minimum k-mer count to be included [default = 1]
+  --log-slots LOG_SLOTS
+                        Starting log(number of count slots). Automatically
+                        increased if necessary [default = 22]
 
 Other:
-  --cpus CPUS           Number of CPUs to use. [default = 1]
+  --cpus CPUS           Number of CPUs to use [default = 1]
   --overwrite           Overwrite existing output
   --squeakr SQUEAKR     Location of squeakr executable [default = squeakr]
   --mantis MANTIS       Location of mantis executable [default = mantis]
