@@ -1,4 +1,4 @@
-{% set version = "0.1.0" %}
+{% set version = "0.2.0" %}
 {% set name = "unitig-caller" %}
 
 package:
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/johnlees/{{ name|lower }}/archive/v{{ version }}.tar.gz
-  sha256: e22666f692da64fc5f5dd631dbd7d36c3fba0a97726e50eb9f602592ab1f1d58
+  sha256: 041223cb6c08eae317ea8e73d94521f0dcaedee374afc5e3b2ce639695937a4a
 
 build:
   number: 0
