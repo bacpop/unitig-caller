@@ -13,29 +13,10 @@ void call_strings(const std::vector<std::string>& assembly_list,
                   const std::string& output_file,
                   const size_t num_threads)
 {
+   // Create threaded queue for computation
    assert(num_threads >= 1);
-
-   // Read all sequences into memory as Fasta objects
-   std::cerr << "Constructing index for all input sequences..." << std::endl;
-   std::vector<fm_index> seq_idx;
-   for (auto file_it = assembly_list.begin(); file_it != assembly_list.end(); ++file_it)
-   {
-      sequence_file_input reference_in{*file_it};
-      std::vector<dna5_vector> reference_seq;
-      for (auto & [seq, id, qual] : reference_in)
-      {
-         reference_seq.push_back(std::move(seq));
-      }
-      seq_idx.push_back(index{reference_seq});
-   }
-
-   std::cerr << "Calling unitigs..." << std::endl;
-   std::ofstream pres_ofs(output_file.c_str());
-
-   // Create threaded queue for distance calculations
-   std::queue<std::future<std::vector<std::string>>> map_threads;
-   const unsigned long int calc_per_thread = (unsigned long int)sequences.size() / num_threads;
-   const unsigned int num_big_threads = sequences.size() % num_threads;
+   const unsigned long int calc_per_thread = (unsigned long int)assembly_list.size() / num_threads;
+   const unsigned int num_big_threads = assembly_list.size() % num_threads;
 
    size_t start = 0;
    std::vector<size_t> start_points;
@@ -56,16 +37,43 @@ void call_strings(const std::vector<std::string>& assembly_list,
    }
    start_points.push_back(start);
 
+   // Read all sequences into memory as Fasta objects (threaded)
+   std::cerr << "Constructing indexes for all input sequences..." << std::endl;
+   std::queue<std::future<std::vector<fasta_fm_index>>> index_threads;
+   for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
+   {
+      // Set the thread off
+      index_threads.push(std::async(std::launch::async, index_fastas,
+                                                        std::cref(assembly_list),
+                                                        start_points[thread_idx],
+                                                        start_points[thread_idx + 1]));
+   }
+
+   // Get results from thread
+   std::vector<fasta_fm_index> seq_idx;
+   while (!index_threads.empty())
+   {
+      std::vector<fasta_fm_index> returned_indexes = index_threads.front().get();
+      index_threads.pop();
+
+      seq_idx.insert(seq_idx.end(), returned_indexes.begin(), returned_indexes.end());
+   }
+
+   std::cerr << "Calling unitigs..." << std::endl;
+   std::ofstream pres_ofs(output_file.c_str());
+
    // Run searches. Each thread looks at a chunk of the input fastas, then looping
    // over all unitig queries (and their reverse complements)
+   std::queue<std::future<std::vector<std::string>>> map_threads;
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
-      dna4_vector query = *unitig_id.c_str()_dna4;
+      dna5_vector query{*unitig_it | view::char_to<dna5>};
+
       for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
       {
          // Set the thread off
          map_threads.push(std::async(std::launch::async, seq_search,
-                                                         std::cref(*query),
+                                                         std::cref(query),
                                                          std::cref(seq_idx),
                                                          std::cref(assembly_names),
                                                          start_points[thread_idx],
@@ -97,10 +105,30 @@ void call_strings(const std::vector<std::string>& assembly_list,
    std::cerr << "Done." << std::endl;
 }
 
-std::vector<std::string> seq_search(const dna4_vector& query,
-                                    const std::vector<fm_index>& seq_idx,
+std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_files,
+                                        const size_t start,
+                                        const size_t end)
+{
+   std::vector<fasta_fm_index> seq_idx;
+   for (auto file_it = fasta_files.begin() + start; file_it != fasta_files.begin() + end; ++file_it)
+   {
+      sequence_file_input reference_in{*file_it};
+      std::vector<dna5_vector> reference_seq;
+      for (auto & [seq, id, qual] : reference_in)
+      {
+         reference_seq.push_back(std::move(seq));
+      }
+      fm_index ref_index{reference_seq};
+      seq_idx.push_back(ref_index);
+   }
+   return seq_idx;
+}
+
+std::vector<std::string> seq_search(const dna5_vector& query,
+                                    const std::vector<fasta_fm_index>& seq_idx,
                                     const std::vector<std::string>& names,
-                                    const size_t start, const size_t end)
+                                    const size_t start,
+                                    const size_t end)
 {
    // TODO: needed?
    // std::string rev_query = rev_comp(query);
