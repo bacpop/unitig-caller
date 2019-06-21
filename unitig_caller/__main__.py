@@ -65,9 +65,9 @@ def get_options():
                              '[default = exact]')
     mantis.add_argument('--kmer-size',
                         type=int,
-                        default=28,
+                        default=31,
                         help='K-mer size for counts '
-                             '[default = 28]')
+                             '[default = 31]')
     mantis.add_argument('--count-cutoff',
                         type=int,
                         default=1,

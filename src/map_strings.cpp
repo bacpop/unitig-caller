@@ -16,13 +16,17 @@ void call_strings(const std::vector<std::string>& assembly_list,
    assert(num_threads >= 1);
 
    // Read all sequences into memory as Fasta objects
-   std::cerr << "Reading reference sequences into memory..." << std::endl;
-   std::vector<Fasta> sequences;
-   auto name_it = assembly_names.begin();
+   std::cerr << "Constructing index for all input sequences..." << std::endl;
+   std::vector<fm_index> seq_idx;
    for (auto file_it = assembly_list.begin(); file_it != assembly_list.end(); ++file_it)
    {
-      sequences.push_back(Fasta(*name_it, *file_it));
-      name_it++;
+      sequence_file_input reference_in{*file_it};
+      std::vector<dna5_vector> reference_seq;
+      for (auto & [seq, id, qual] : reference_in)
+      {
+         reference_seq.push_back(std::move(seq));
+      }
+      seq_idx.push_back(index{reference_seq});
    }
 
    std::cerr << "Calling unitigs..." << std::endl;
@@ -56,12 +60,14 @@ void call_strings(const std::vector<std::string>& assembly_list,
    // over all unitig queries (and their reverse complements)
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
+      dna4_vector query = *unitig_id.c_str()_dna4;
       for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
       {
          // Set the thread off
          map_threads.push(std::async(std::launch::async, seq_search,
-                                                         std::cref(*unitig_it),
-                                                         std::cref(sequences),
+                                                         std::cref(*query),
+                                                         std::cref(seq_idx),
+                                                         std::cref(assembly_names),
                                                          start_points[thread_idx],
                                                          start_points[thread_idx + 1]));
       }
@@ -91,16 +97,23 @@ void call_strings(const std::vector<std::string>& assembly_list,
    std::cerr << "Done." << std::endl;
 }
 
-std::vector<std::string> seq_search(const std::string& query, const std::vector<Fasta>& sequences, const size_t start, const size_t end)
+std::vector<std::string> seq_search(const dna4_vector& query,
+                                    const std::vector<fm_index>& seq_idx,
+                                    const std::vector<std::string>& names,
+                                    const size_t start, const size_t end)
 {
-   std::string rev_query = rev_comp(query);
+   // TODO: needed?
+   // std::string rev_query = rev_comp(query);
    std::vector<std::string> present;
-   for (auto fasta_it = sequences.begin() + start; fasta_it != sequences.begin() + end; fasta_it++)
+   auto name_it = names.begin() + start;
+   for (auto ref_it = seq_idx.begin() + start; ref_it != seq_idx.begin() + end; ref_it++)
    {
-      if (fasta_it->hasSeq(query) || fasta_it->hasSeq(rev_query))
+      auto results = search(query, *ref_it);
+      if (results.size() > 0)
       {
-         present.push_back(fasta_it->get_name());
+         present.push_back(*name_it);
       }
+      name_it++;
    }
    return present;
 }
