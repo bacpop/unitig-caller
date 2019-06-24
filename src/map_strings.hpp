@@ -26,6 +26,7 @@
 #include <pybind11/stl.h>
 
 // seqan3 headers
+#include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
 #include <seqan3/range/view/char_to.hpp>
 #include <seqan3/io/sequence_file/all.hpp>

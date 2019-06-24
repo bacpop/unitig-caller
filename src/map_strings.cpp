@@ -67,6 +67,7 @@ void call_strings(const std::vector<std::string>& assembly_list,
    std::queue<std::future<std::vector<std::string>>> map_threads;
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
+      // debug_stream << *unitig_it << std::endl;
       dna5_vector query{*unitig_it | view::char_to<dna5>};
 
       for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
@@ -136,9 +137,13 @@ std::vector<std::string> seq_search(const dna5_vector& query,
    auto name_it = names.begin() + start;
    for (auto ref_it = seq_idx.begin() + start; ref_it != seq_idx.begin() + end; ref_it++)
    {
+      // debug_stream << *name_it << std::endl;
       auto results = search(query, *ref_it);
-      if (results.size() > 0)
+      // debug_stream << "There are " << results.size() << " hits.\n";
+      // debug_stream << search(query, *ref_it) << '\n';
+      if (!results.empty())
       {
+         // debug_stream << "found" << std::endl;
          present.push_back(*name_it);
       }
       name_it++;
