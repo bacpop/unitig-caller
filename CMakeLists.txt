@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 project(map_strings)
+set(CMAKE_CXX_STANDARD 17)
 
 set(SeqAn3_DIR "${CMAKE_SOURCE_DIR}/seqan3/build_system")
 find_package (SeqAn3 REQUIRED)
