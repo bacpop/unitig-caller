@@ -116,7 +116,7 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
       std::string idx_file_name = *file_it + ".fm";
 
       // Read index if it already exists
-      if (std::filesystem::exists(idx_file_name))
+      if (std::experimental::filesystem::exists(idx_file_name))
       {
          fasta_fm_index ref_index;
          {
