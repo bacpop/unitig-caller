@@ -113,13 +113,36 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
    std::vector<fasta_fm_index> seq_idx;
    for (auto file_it = fasta_files.begin() + start; file_it != fasta_files.begin() + end; ++file_it)
    {
-      sequence_file_input reference_in{*file_it};
-      std::vector<dna5_vector> reference_seq;
-      for (auto & [seq, id, qual] : reference_in)
+      std::string idx_file_name = *file_it + ".fm";
+
+      // Read index if it already exists
+      if (std::filesystem::exists(idx_file_name))
       {
-         reference_seq.push_back(std::move(seq));
+         fasta_fm_index ref_index;
+         {
+            std::ifstream is{idx_file_name, std::ios::binary};
+            cereal::BinaryInputArchive iarchive{is};
+            iarchive(ref_index);
+         }
       }
-      fm_index ref_index{reference_seq};
+      else
+      {
+         // Create index
+         sequence_file_input reference_in{*file_it};
+         std::vector<dna5_vector> reference_seq;
+         for (auto & [seq, id, qual] : reference_in)
+         {
+            reference_seq.push_back(std::move(seq));
+         }
+         fasta_fm_index ref_index{reference_seq};
+
+         // Write index to file
+         {
+            std::ofstream os{idx_file_name, std::ios::binary};
+            cereal::BinaryOutputArchive oarchive{os};
+            oarchive(ref_index);
+         }
+      }
       seq_idx.push_back(ref_index);
    }
    return seq_idx;

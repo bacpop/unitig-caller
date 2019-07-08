@@ -5,7 +5,7 @@
  *
  */
 
-// C/C++/C++11 headers
+// C/C++/C++11/C++17 headers
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <iostream>
@@ -20,6 +20,7 @@
 #include <thread>
 #include <list>
 #include <assert.h>
+#include <filesystem>
 
 // pybind11 headers
 #include <pybind11/pybind11.h>
@@ -32,6 +33,7 @@
 #include <seqan3/io/sequence_file/all.hpp>
 #include <seqan3/search/fm_index/fm_index.hpp>
 #include <seqan3/search/algorithm/search.hpp>
+#include <cereal/archives/binary.hpp>
 
 namespace py = pybind11;
 using namespace seqan3;
