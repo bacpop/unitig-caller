@@ -52,8 +52,7 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON',
-                      '-DCMAKE_TOOLCHAIN_FILE=' + ext.sourcedir +'/cross-linux.cmake']
+                      '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
