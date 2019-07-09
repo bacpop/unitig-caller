@@ -1,13 +1,15 @@
 # unitig-caller
 Determines presence/absence of sequence elements in bacterial sequence
-data. Currently uses assemblies as inputs (reads also possible by changing
+data. Currently uses assemblies as inputs (reads are also possible by changing
 some options).
 
-For small numbers of queries use `--simple`. For larger numbers
-(e.g. whole genome) use `--index` followed by `--call`.
+For most uses `--simple` will suffice. For larger numbers
+of genomes with repeated calling use `--index` followed by `--call`.
 
-Simple mode uses string matching after loading seqs into main memory.
-Index/call mode is a wrapper around squeakr and mantis.
+Simple mode constructs a suffix array for each input in main memory to
+perform rapid searching.
+Index/call mode is a wrapper around [squeakr](https://github.com/splatlab/squeakr)
+and [mantis](https://github.com/splatlab/mantis).
 
 ## Install
 
@@ -35,7 +37,7 @@ Get it from PyPI:
 pip install unitig_caller
 ```
 
-Requires [squeakr](https://github.com/splatlab/squeakr) version 1.0
+Requires [squeakr](https://github.com/splatlab/squeakr) version 0.6
 and [mantis](https://github.com/splatlab/mantis) version 0.2.0 to run
 the `--index` and `--call` modes.
 
@@ -50,8 +52,8 @@ python setup.py install
 ## Usage
 
 ### Running simple mode
-This uses code from [seer](https://github.com/johnlees/seer) to perform
-simple string matches:
+This uses suffix arrays (FM-index) provided by [SeqAn3](https://www.seqan.de/) to perform
+string matches:
 ```
 unitig-caller --mode simple --strains strain_list.txt --unitigs queries.txt --output calls.txt
 ```
@@ -64,6 +66,9 @@ to be in the first column (tab separated). A header row is assumed, so
 output from [pyseer](https://github.com/mgalardini/pyseer) etc can be directly used.
 
 `calls_unitigs.txt` will contain unitig calls in seer/pyseer k-mer format.
+
+By default FM-indexes are saved in the same location as the assembly files so that they can
+be quickly loaded by subsequent runs. To turn this off use `--no-save-idx`.
 
 ### Running with mantis
 First create an index of all the sequences:
@@ -103,6 +108,7 @@ Input/output:
   --strains STRAINS     List of strains to index
   --unitigs UNITIGS     List of unitigs to call
   --output OUTPUT       Prefix for output [default = 'mantis_index']
+  --no-save-idx         Do not save FM-indexes for reuse
   --mantis-index MANTIS_INDEX
                         Directory containing mantis index (produced by index
                         mode) [default = 'mantis_index']
@@ -110,7 +116,7 @@ Input/output:
 mantis/squeakr options:
   --approximate         Use approximate count mode [default = exact]
   --kmer-size KMER_SIZE
-                        K-mer size for counts [default = 28]
+                        K-mer size for counts [default = 31]
   --count-cutoff COUNT_CUTOFF
                         Minimum k-mer count to be included [default = 1]
   --log-slots LOG_SLOTS
@@ -132,7 +138,9 @@ Testing on 603 *S. pneumoniae* assemblies:
 | ------------- | ------------- |-------|---------|--------|-------|---------- |
 | Index         | Index         | 1     | 25.0min | 12.7Gb | 287Mb | 10.7Gb    |
 |               | Index         | 4     | 13.3min | 13.0Gb | 287Mb | 10.7Gb    |
-| 100 unitigs   | Simple        | 1     | 27.4min | 1.1Gb  | None  | None      |
-|               | Simple        | 4     | 9.3min  | 1.1Gb  | None  | None      |
-|               | Call          | 1     | 0.6s    | 34.1Mb | Index | Index     |
-| 100k unitigs  | Call          | 1     | 2.9min  | 362Mb  | Index | Index     |
+|               | Simple        | 1     | 3.9min  | 1.0Gb  | 692Mb | None      |
+|               | Simple        | 4     | 1.0min  | 1.0Gb  | 692Mb | None      |
+| 100 unitigs   | Simple        | 1     | 2.0s    | 1.0Gb  | Index | NA        |
+|               | Call          | 1     | 0.6s    | 34.1Mb | Index | NA        |
+| 100k unitigs  | Simple        | 4     | 5.8min  | 1.0Gb  | Index | NA        |
+|               | Call          | 1     | 2.9min  | 362Mb  | Index | NA        |
