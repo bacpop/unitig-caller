@@ -48,7 +48,7 @@ void call_strings(const std::vector<std::string>& assembly_list,
                                                         std::cref(assembly_list),
                                                         start_points[thread_idx],
                                                         start_points[thread_idx + 1],
-                                                        write_idx);
+                                                        write_idx));
    }
 
    // Get results from thread
