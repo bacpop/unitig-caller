@@ -1,5 +1,5 @@
 # Copyright 2019 John Lees
 
-'''Wrapper around mantis to detect presence of sequence elements'''
+'''Methods to detect presence of sequence elements'''
 
-__version__ = '0.2.0'
+__version__ = '1.0.0'

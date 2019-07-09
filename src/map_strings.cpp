@@ -11,6 +11,7 @@ void call_strings(const std::vector<std::string>& assembly_list,
                   const std::vector<std::string>& assembly_names,
                   const std::vector<std::string>& query_list,
                   const std::string& output_file,
+                  const bool write_idx,
                   const size_t num_threads)
 {
    // Create threaded queue for computation
@@ -46,7 +47,8 @@ void call_strings(const std::vector<std::string>& assembly_list,
       index_threads.push(std::async(std::launch::async, index_fastas,
                                                         std::cref(assembly_list),
                                                         start_points[thread_idx],
-                                                        start_points[thread_idx + 1]));
+                                                        start_points[thread_idx + 1],
+                                                        write_idx);
    }
 
    // Get results from thread
@@ -108,7 +110,8 @@ void call_strings(const std::vector<std::string>& assembly_list,
 
 std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_files,
                                         const size_t start,
-                                        const size_t end)
+                                        const size_t end,
+                                        const bool write_idx)
 {
    std::vector<fasta_fm_index> seq_idx;
    for (auto file_it = fasta_files.begin() + start; file_it != fasta_files.begin() + end; ++file_it)
@@ -116,9 +119,9 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
       std::string idx_file_name = *file_it + ".fm";
 
       // Read index if it already exists
+      fasta_fm_index ref_index;
       if (std::experimental::filesystem::exists(idx_file_name))
       {
-         fasta_fm_index ref_index;
          {
             std::ifstream is{idx_file_name, std::ios::binary};
             cereal::BinaryInputArchive iarchive{is};
@@ -134,9 +137,10 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
          {
             reference_seq.push_back(std::move(seq));
          }
-         fasta_fm_index ref_index{reference_seq};
+         ref_index = fasta_fm_index{reference_seq};
 
          // Write index to file
+         if (write_idx)
          {
             std::ofstream os{idx_file_name, std::ios::binary};
             cereal::BinaryOutputArchive oarchive{os};

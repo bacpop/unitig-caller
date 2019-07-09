@@ -40,7 +40,7 @@ def get_options():
     mode.add_argument('--simple',
                         action='store_true',
                         default=False,
-                        help='Use string matching to make calls')
+                        help='Use FM-index to make calls')
 
     io = parser.add_argument_group('Input/output')
     io.add_argument('--strains',
@@ -51,6 +51,10 @@ def get_options():
                     default='mantis_index',
                     help='Prefix for output '
                          '[default = \'mantis_index\']')
+    io.add_argument('--no-save-idx',
+                    default=False,
+                    action='store_true',
+                    help='Do not save FM-indexes for reuse')
     io.add_argument('--mantis-index',
                     default='mantis_index',
                     help='Directory containing mantis index '
@@ -107,9 +111,10 @@ def get_options():
 def main():
     options = get_options()
 
-    mantis_major, mantis_minor, mantis_patch = check_mantis_version(options.mantis)
-    if (mantis_major == 0 and mantis_minor < 2):
-        sys.stderr.write("Requires mantis version 0.2 or higher\n")
+    if not options.simple:
+        mantis_major, mantis_minor, mantis_patch = check_mantis_version(options.mantis)
+        if (mantis_major == 0 and mantis_minor < 2):
+            sys.stderr.write("Requires mantis version 0.2 or higher\n")
 
     if options.index:
         sys.stderr.write("Creating counts with squeakr\n")
@@ -188,8 +193,13 @@ def main():
                 unitig_fields = unitig_line.rstrip().split("\t")
                 unitigs.append(unitig_fields[0])
 
-        # call c++ code to map
-        map_strings.call(fasta_in, names_in, unitigs, options.output + "_unitigs.txt", options.cpus)
+        # call c++ code to map (also writes output file)
+        map_strings.call(fasta_in,
+                         names_in,
+                         unitigs,
+                         options.output + "_unitigs.txt",
+                         not options.no_save_idx,
+                         options.cpus)
 
     sys.exit(0)
 

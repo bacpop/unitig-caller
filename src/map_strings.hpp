@@ -41,7 +41,7 @@ using namespace seqan3;
 typedef fm_index<true, default_sdsl_index_type> fasta_fm_index;
 
 // Constants
-const std::string VERSION = "0.3.0";
+const std::string VERSION = "1.0.0";
 
 // Structs
 
@@ -51,10 +51,12 @@ void call_strings(const std::vector<std::string>& assembly_list,
                   const std::vector<std::string>& assembly_names,
                   const std::vector<std::string>& query_list,
                   const std::string& output_file,
+                  const bool write_idx = 1,
                   const size_t num_threads = 1);
 std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_files,
                                         const size_t start,
-                                        const size_t end);
+                                        const size_t end,
+                                        const bool write_idx = 1);
 std::vector<std::string> seq_search(const dna5_vector& query,
                                     const std::vector<fasta_fm_index>& sequences,
                                     const std::vector<std::string>& names,
@@ -66,5 +68,6 @@ int py_call_strings(std::vector<std::string> assembly_list,
                     std::vector<std::string> assembly_names,
                     std::vector<std::string> query_list,
                     std::string output_file,
+                    bool write_idx = 1,
                     size_t num_threads = 1);
 
