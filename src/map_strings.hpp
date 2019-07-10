@@ -29,7 +29,8 @@
 // seqan3 headers
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/alphabet/all.hpp>
-#include <seqan3/range/view/char_to.hpp>
+#include <seqan3/range/view/all.hpp>
+#include <seqan3/std/ranges>
 #include <seqan3/io/sequence_file/all.hpp>
 #include <seqan3/search/fm_index/fm_index.hpp>
 #include <seqan3/search/algorithm/search.hpp>
@@ -41,7 +42,7 @@ using namespace seqan3;
 typedef fm_index<true, default_sdsl_index_type> fasta_fm_index;
 
 // Constants
-const std::string VERSION = "1.0.0";
+const std::string VERSION = "1.0.1";
 
 // Structs
 
