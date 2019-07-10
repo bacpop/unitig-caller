@@ -158,16 +158,22 @@ std::vector<std::string> seq_search(const dna5_vector& query,
                                     const size_t start,
                                     const size_t end)
 {
-   // TODO: needed?
-   // std::string rev_query = rev_comp(query);
    std::vector<std::string> present;
    auto name_it = names.begin() + start;
    for (auto ref_it = seq_idx.begin() + start; ref_it != seq_idx.begin() + end; ref_it++)
    {
       // debug_stream << *name_it << std::endl;
+
       auto results = search(query, *ref_it);
       // debug_stream << "There are " << results.size() << " hits.\n";
-      // debug_stream << search(query, *ref_it) << '\n';
+      // debug_stream << results << '\n';
+      if (results.empty())
+      {
+         results = search(query | std::view::reverse | seqan3::view::complement, *ref_it);
+         // debug_stream << "There are " << results.size() << " hits.\n";
+         // debug_stream << results << '\n';
+      }
+
       if (!results.empty())
       {
          // debug_stream << "found" << std::endl;
