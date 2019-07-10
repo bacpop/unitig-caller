@@ -1,4 +1,6 @@
 # unitig-caller
+[![Anaconda package](https://anaconda.org/bioconda/unitig-caller/badges/version.svg)](https://anaconda.org/bioconda/unitig-caller)
+
 Determines presence/absence of sequence elements in bacterial sequence
 data. Currently uses assemblies as inputs (reads are also possible by changing
 some options).
