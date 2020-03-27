@@ -14,8 +14,8 @@ def check_bifrost_version(exe='Bifrost'):
         exe (str)
             Location of executable
     Returns:
-        message (str)
-            Bifrost version
+        version (tuple)
+            Tuple of major, minor, patch bifrost version
     """
     p = subprocess.Popen([exe], shell=True, stdout=subprocess.PIPE)
     major_version = 0
@@ -32,29 +32,57 @@ def check_bifrost_version(exe='Bifrost'):
     else:
         return install_error
 
-def run_mantis_build(squeakr_files, out_dir, log_slots=22, mantis_exe='mantis'):
+def run_bifrost_build(in_file, add_in_file = None, out_file, coloured = True, kmer_size=31, threads=1, bifrost_exe='Bifrost'):
     """Runs mantis build on a set of squeakr files.
 
     Args:
-        squeakr_files (str)
-            File listing input squeakr file
-        out_dir (str)
-            Output directory
-        log_slots (int)
-            Log of number of count slots (-s)
-
-            [default = 22]
-        mantis_exe (str)
-            Location of mantis executable
-
-            [deafault = 'mantis']
+        in_file (str)
+            path for .txt file containing list of paths to fasta/fastq files. Must be specified as either 'reads.txt' or 'refs.txt'
+        add_in_file (str)
+            additional .txt files containing list of paths to fasta/fastq files. Must be specified as either 'reads.txt' or 'refs.txt'
+        out_file (str)
+            prefix for output files
+        coloured (bool)
+            Colour compacted DBG
+            [default = True]
+        kmer_size (int)
+            k-mer size used for DBG construction (maximum 31)
+            [default = 31]
+        threads (int)
+            number of threads to use
+            [default = 1]
+        bifrost_exe (str)
+            Location of bifrost executable
+            [default = 'bifrost']
     """
-    mantis_cmd = mantis_exe + " build"
-    mantis_cmd += " -s " + str(log_slots)
-    mantis_cmd += " -i " + squeakr_files
-    mantis_cmd += " -o " + out_dir
+    bifrost_cmd = bifrost_exe + " build"
 
-    subprocess.run(mantis_cmd, shell=True, check=True)
+    if add_in_file == None:
+        if "reads.txt" in str(in_file):
+            bifrost_cmd += " -s " + str(in_file)
+        elif "refs.txt" in str(in_file):
+            bifrost_cmd += " -r " + str(in_file)
+        else:
+            pass
+    else:
+        if "reads.txt" in str(in_file) and "refs.txt" in str(add_in_file):
+            bifrost_cmd += " -s " + str(in_file)
+            bifrost_cmd += " -r " + str(add_in_file)
+        elif "refs.txt" in str(in_file) and "reads.txt" in str(add_in_file):
+            bifrost_cmd += " -r " + str(in_file)
+            bifrost_cmd += " -s " + str(add_in_file)
+        else:
+            pass
+    bifrost_cmd += " -o " + out_file
+    bifrost_cmd += " -k " + str(kmer_size)
+    bifrost_cmd += " -t " + str(threads)
+    if coloured == True:
+        bifrost_cmd += " -c"
+
+    if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']:
+        subprocess.run(bifrost_cmd, shell=True, check=True)
+    else:
+        return "Please submit input files as 'reads.txt' or 'refs.txt' only"
 
 def run_mantis_index(mantis_dir, num_threads=1, delete_RRR=False, mantis_exe='mantis'):
     """Runs mantis mst on a built index.
