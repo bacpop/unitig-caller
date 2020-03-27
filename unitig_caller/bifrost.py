@@ -23,11 +23,11 @@ def check_bifrost_version(exe='Bifrost'):
     patch_version = 0
     install_error = "No Bifrost install available"
     version_line = p.stdout.readline()
-    version_match = re.search(r"^Bifrost (\d+)\.(\d+)\.(\d+)$", line.rstrip().decode())
+    version_match = re.search(r"^Bifrost (\d+).(\d+).(\d+)$", version_line.rstrip().decode())
     major_version = int(version_match.group(1))
     minor_version = int(version_match.group(2))
     patch_version = int(version_match.group(3))
-    if major_version != 0 and minor_version != 0 and patch_version !=0:
+    if major_version != 0 or minor_version != 0 or patch_version !=0:
         return (major_version, minor_version, patch_version)
     else:
         return install_error
