@@ -32,13 +32,13 @@ def check_bifrost_version(exe='Bifrost'):
     else:
         return install_error
 
-def run_bifrost_build(in_file, add_in_file = None, out_file, coloured = True, kmer_size=31, minimizer_size = 23, threads=1, bifrost_exe='Bifrost'):
+def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, kmer_size = 31, minimizer_size = 23, threads = 1, bifrost_exe='Bifrost'):
     """Runs mantis build on a set of squeakr files.
 
     Args:
         in_file (str)
             path for .txt file containing list of paths to fasta/fastq files. Must be specified as either 'reads.txt' or 'refs.txt'
-        add_in_file (str)
+        addit_in_file (str)
             additional .txt files containing list of paths to fasta/fastq files. Must be specified as either 'reads.txt' or 'refs.txt'
         out_file (str)
             prefix for output files
@@ -60,7 +60,7 @@ def run_bifrost_build(in_file, add_in_file = None, out_file, coloured = True, km
     """
     bifrost_cmd = bifrost_exe + " build"
 
-    if add_in_file == None:
+    if addit_in_file == None:
         if "reads.txt" in str(in_file):
             bifrost_cmd += " -s " + str(in_file)
         elif "refs.txt" in str(in_file):
@@ -68,12 +68,12 @@ def run_bifrost_build(in_file, add_in_file = None, out_file, coloured = True, km
         else:
             pass
     else:
-        if "reads.txt" in str(in_file) and "refs.txt" in str(add_in_file):
+        if "reads.txt" in str(in_file) and "refs.txt" in str(addit_in_file):
             bifrost_cmd += " -s " + str(in_file)
-            bifrost_cmd += " -r " + str(add_in_file)
-        elif "refs.txt" in str(in_file) and "reads.txt" in str(add_in_file):
+            bifrost_cmd += " -r " + str(addit_in_file)
+        elif "refs.txt" in str(in_file) and "reads.txt" in str(addit_in_file):
             bifrost_cmd += " -r " + str(in_file)
-            bifrost_cmd += " -s " + str(add_in_file)
+            bifrost_cmd += " -s " + str(addit_in_file)
         else:
             pass
     bifrost_cmd += " -o " + out_file
@@ -82,8 +82,7 @@ def run_bifrost_build(in_file, add_in_file = None, out_file, coloured = True, km
     bifrost_cmd += " -t " + str(threads)
     if coloured == True:
         bifrost_cmd += " -c"
-
-    if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']:
+    if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
         return "Please submit input files as 'reads.txt' or 'refs.txt' only"
