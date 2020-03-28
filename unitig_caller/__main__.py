@@ -10,12 +10,19 @@ from functools import partial
 
 #import map_strings
 
-from .__init__ import __version__
+#from .__init__ import __version__
 
-from .bifrost import check_bifrost_version
-from .bifrost import run_bifrost_build
-from .bifrost import gfa_to_fasta
-from .bifrost import run_bifrost_query
+#from .bifrost import check_bifrost_version
+#from .bifrost import run_bifrost_build
+#from .bifrost import gfa_to_fasta
+#from .bifrost import run_bifrost_query
+
+from __init__ import __version__
+
+from bifrost import check_bifrost_version
+from bifrost import run_bifrost_build
+from bifrost import gfa_to_fasta
+from bifrost import run_bifrost_query
 
 def get_options():
     import argparse
@@ -43,10 +50,15 @@ def get_options():
                     help='List of additional input files in .txt format of different type to those in --seq. '
                          '[default = None]')
     buildio.add_argument('--no_colour',
-                        action='store_false',
-                        default=True,
+                        action='store_true',
+                        default=False,
                         help='Specify for uncoloured de Bruijn Graph '
-                             '[default = True]')
+                             '[default = False]')
+    buildio.add_argument('--clean',
+                        action='store_true',
+                        default=False,
+                        help='Clean DBG (clip tips and delete isolated contigs shorter than k k-mers in length) '
+                             '[default = False]')
 
     queryio = parser.add_argument_group('Query Input/output')
     queryio.add_argument('--graph',
@@ -54,6 +66,7 @@ def get_options():
     queryio.add_argument('--colours',
                         help='Colours file for previously built Bifrost graph (must match file used in --graph) ')
     queryio.add_argument('--ratiok',
+                        type=float,
                         default=0.8,
                         help='ratio of k-mers from queries that must occur in the graph to be considered as belonging to colour'
                              '[default = 0.8]')
@@ -101,7 +114,7 @@ def main():
     if options.build:
         sys.stderr.write("Building de Bruijn graph with Bifrost\n")
 
-        run_bifrost_build(options.seq, options.output, options.addit_seq, options.no_colour, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
+        run_bifrost_build(options.seq, options.output, options.addit_seq, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
 
     elif options.query:
 

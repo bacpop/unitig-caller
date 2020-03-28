@@ -32,7 +32,7 @@ def check_bifrost_version(exe='Bifrost'):
     else:
         return install_error
 
-def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, kmer_size = 31, minimizer_size = 23, threads = 1, bifrost_exe='Bifrost'):
+def run_bifrost_build(in_file, out_file, addit_in_file = None, no_colour = False, clean = False, kmer_size = 31, minimizer_size = 23, threads = 1, bifrost_exe='Bifrost'):
     """Runs Bifrost build on set of refernce genomes/read files.
 
     Args:
@@ -42,8 +42,8 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, 
             additional .txt files containing list of paths to fasta/fastq files. Must be specified as either 'reads.txt' or 'refs.txt'
         out_file (str)
             prefix for output files
-        coloured (bool)
-            Colour compacted DBG
+        no_colour (bool)
+            Do not generate coloured compacted DBG
             [default = True]
         kmer_size (int)
             k-mer size used for DBG construction (maximum = 31)
@@ -80,8 +80,11 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, 
     bifrost_cmd += " -k " + str(kmer_size)
     bifrost_cmd += " -m " + str(minimizer_size)
     bifrost_cmd += " -t " + str(threads)
-    if coloured == True:
+    if no_colour == False:
         bifrost_cmd += " -c"
+    if clean == True:
+        bifrost_cmd += " -i -d "
+    print(bifrost_cmd)
     if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
@@ -96,18 +99,11 @@ def gfa_to_fasta(in_file):
     """
     base = os.path.splitext(in_file)[0]
     out_file = base + ".fasta"
-    seq_list = []
-    with open(in_file, "r") as f:
-        f_lines = f.readlines()
-        for line in f_lines:
+    with open(in_file, "r") as f, open(out_file, "w") as o:
+        for line in f:
             parsed_line = re.split(r'\t+', line.rstrip('\t'))
             if parsed_line[0] == "S":
-                seq_list.append(parsed_line[2])
-    count = 0
-    with open(out_file, "w") as o:
-        for seq in seq_list:
-            o.write(">" + str(count) + "\n" + str(seq) + "\n")
-            count += 1
+                    o.write(">" + str(parsed_line[1]) + "\n" + str(parsed_line[2]) + "\n")
 
 def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0.8, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
     """Runs query of unitigs on coloured Bifrost graph.
@@ -153,5 +149,5 @@ def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0
 
     if inexact == True:
         bifrost_cmd += " -n"
-
+    print(bifrost_cmd)
     subprocess.run(bifrost_cmd, shell=True, check=True)
