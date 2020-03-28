@@ -33,7 +33,7 @@ def check_bifrost_version(exe='Bifrost'):
         return install_error
 
 def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, kmer_size = 31, minimizer_size = 23, threads = 1, bifrost_exe='Bifrost'):
-    """Runs mantis build on a set of squeakr files.
+    """Runs Bifrost build on set of refernce genomes/read files.
 
     Args:
         in_file (str)
@@ -86,3 +86,72 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, coloured = True, 
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
         return "Please submit input files as 'reads.txt' or 'refs.txt' only"
+
+def gfa_to_fasta(in_file):
+    """Converts .gfa file to .fasta, using same file name.
+
+    Args:
+        in_file (str)
+            path for .gfa file to convert.
+    """
+    base = os.path.splitext(in_file)[0]
+    out_file = base + ".fasta"
+    seq_list = []
+    with open(in_file, "r") as f:
+        f_lines = f.readlines()
+        for line in f_lines:
+            parsed_line = re.split(r'\t+', line.rstrip('\t'))
+            if parsed_line[0] == "S":
+                seq_list.append(parsed_line[2])
+    count = 0
+    with open(out_file, "w") as o:
+        for seq in seq_list:
+            o.write(">" + str(count) + "\n" + str(seq) + "\n")
+            count += 1
+
+def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0.8, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
+    """Runs query of unitigs on coloured Bifrost graph.
+
+    Args:
+        graph_file (str)
+            input .gfa file from "Bifrost build" execution
+        query_file (str)
+            .fasta file/.txt file containing sequences to be queried
+        colour_file (str)
+            input colour file from "Bifrost build" execution
+        out_file (str)
+            prefix for output file
+        ratio_k (float)
+            ratio of k-mers from queries that must occur in the graph
+            [default = 0.8]
+        kmer_size (int)
+            k-mer size used for query search
+            [default = 31]
+        minimizer_size (int)
+            minimizer size used for k-mer hashing (maximum = kmer_size)
+            [default = 21]
+        threads (int)
+            number of threads to use
+            [default = 1]
+        inexact (bool)
+            Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries
+            [default = False]
+        bifrost_exe (str)
+            Location of bifrost executable
+            [default = 'bifrost']
+    """
+    bifrost_cmd = bifrost_exe + " query"
+
+    bifrost_cmd += " -g " + graph_file
+    bifrost_cmd += " -q " + query_file
+    bifrost_cmd += " -o " + out_file
+    bifrost_cmd += " -e " + str(ratio_k)
+    bifrost_cmd += " -f " + colour_file
+    bifrost_cmd += " -k " + str(kmer_size)
+    bifrost_cmd += " -m " + str(minimizer_size)
+    bifrost_cmd += " -t " + str(threads)
+
+    if inexact == True:
+        bifrost_cmd += " -n"
+
+    subprocess.run(bifrost_cmd, shell=True, check=True)
