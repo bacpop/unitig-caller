@@ -84,26 +84,11 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, no_colour = False
         bifrost_cmd += " -c"
     if clean == True:
         bifrost_cmd += " -i -d "
-    print(bifrost_cmd)
+        
     if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
         return "Please submit input files as 'reads.txt' or 'refs.txt' only"
-
-def gfa_to_fasta(in_file):
-    """Converts .gfa file to .fasta, using same file name.
-
-    Args:
-        in_file (str)
-            path for .gfa file to convert.
-    """
-    base = os.path.splitext(in_file)[0]
-    out_file = base + ".fasta"
-    with open(in_file, "r") as f, open(out_file, "w") as o:
-        for line in f:
-            parsed_line = re.split(r'\t+', line.rstrip('\t'))
-            if parsed_line[0] == "S":
-                    o.write(">" + str(parsed_line[1]) + "\n" + str(parsed_line[2]) + "\n")
 
 def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0.8, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
     """Runs query of unitigs on coloured Bifrost graph.
@@ -149,5 +134,82 @@ def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0
 
     if inexact == True:
         bifrost_cmd += " -n"
-    print(bifrost_cmd)
+
     subprocess.run(bifrost_cmd, shell=True, check=True)
+
+def gfa_to_fasta(in_file):
+    """Converts .gfa file to .fasta, using same file name.
+
+    Args:
+        in_file (str)
+            path for .gfa file to convert.
+    """
+    base = os.path.splitext(in_file)[0]
+    out_file = base + "_unitigs.fasta"
+    with open(in_file, "r") as f, open(out_file, "w") as o:
+        for line in f:
+            parsed_line = re.split(r'\t+', line.rstrip('\t'))
+            if parsed_line[0] == "S":
+                    o.write(">" + str(parsed_line[1]) + "\n" + str(parsed_line[2]) + "\n")
+
+def rtab_format(infile):
+    """Converts standard .tsv Bifrost output to rtab, using same file name.
+
+    Args:
+        in_file (str)
+            path for .tsv file to convert.
+    """
+    with open(infile, "r") as f:
+        header = f.readline()
+        parsed_header = re.split(r'\t+', header.rstrip('\t'))
+        del parsed_header[0]
+        new_header = ["pattern_id"]
+
+        for item in parsed_header:
+            base = os.path.splitext(item)[0]
+            new_header.append(base)
+
+        new_header_string = '\t'.join(new_header)
+        lines = f.readlines()
+        lines = [new_header_string + '\n'] + lines
+
+    with open(infile, "w") as o:
+        o.writelines(lines)
+
+def pyseer_format(tsv, fasta):
+    """Creates pyseer file from rtab .tsv and .fasta files, using same file name as .tsv file.
+
+    Args:
+        tsv (str)
+            path for rtab .tsv file containing unitig IDs and presence/absence in source genomes.
+        fasta (str)
+            path for .fasta file containing unitigs and associated IDs, corresponding to those in rtab file.
+    """
+    from itertools import groupby
+    base = os.path.splitext(tsv)[0]
+    outfile = base + "_pyseer.tsv"
+    fa = open(fasta, "r")
+    faiter = (x[1] for x in groupby(fa, lambda line: line[0] == ">"))
+
+    fa_dict = {}
+    for name in faiter:
+        headerstr = name.__next__()[1:].strip()
+        seq = "".join(s.strip() for s in faiter.__next__())
+        fa_dict[headerstr] = seq
+
+    tsv_dict = {}
+    with open(tsv, "r") as ft:
+        header = ft.readline().rstrip("\n")
+        parsed_header = re.split(r'\t+', header.rstrip('\t'))
+        for line in ft:
+            line = line.rstrip("\n")
+            parsed_line = re.split(r'\t+', line.rstrip('\t'))
+            genome_list = []
+            for i in range(1, len(parsed_line)):
+                if int(parsed_line[i]) == 1:
+                    genome_list.append(parsed_header[i] + ":1")
+            tsv_dict[parsed_line[0]] = genome_list
+
+    with open(outfile, "w") as o:
+        for key in fa_dict:
+            o.write(fa_dict[key] + " | " + " ".join(tsv_dict[key]) + "\n")

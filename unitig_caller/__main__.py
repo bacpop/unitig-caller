@@ -23,6 +23,8 @@ from bifrost import check_bifrost_version
 from bifrost import run_bifrost_build
 from bifrost import gfa_to_fasta
 from bifrost import run_bifrost_query
+from bifrost import rtab_format
+from bifrost import pyseer_format
 
 def get_options():
     import argparse
@@ -61,10 +63,8 @@ def get_options():
                              '[default = False]')
 
     queryio = parser.add_argument_group('Query Input/output')
-    queryio.add_argument('--graph',
-                    help='Previously built Bifrost graph in .gfa format  ')
-    queryio.add_argument('--colours',
-                        help='Colours file for previously built Bifrost graph (must match file used in --graph) ')
+    queryio.add_argument('--input',
+                    help='Prefix for graph and colour files from build exection (file name without extension)  ')
     queryio.add_argument('--ratiok',
                         type=float,
                         default=0.8,
@@ -74,6 +74,11 @@ def get_options():
                         action='store_true',
                         default=False,
                         help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries'
+                             '[default = False]')
+    queryio.add_argument('--pyseer',
+                        action='store_true',
+                        default=False,
+                        help='Generate file compatible with pyseer analysis.'
                              '[default = False]')
 
     shared = parser.add_argument_group('Shared options')
@@ -120,14 +125,24 @@ def main():
 
         sys.stderr.write("Creating .fasta query file from unitigs in Bifrost graph\n")
 
-        gfa_to_fasta(options.graph)
+        graph_file = options.input + ".gfa"
+        query_file = options.input + "_unitigs.fasta"
+        colour_file = options.input+ ".bfg_colors"
+        tsv_file = options.output + ".tsv"
 
-        base = os.path.splitext(options.graph)[0]
-        query_file = base + ".fasta"
+        gfa_to_fasta(graph_file)
 
         sys.stderr.write("Querying unitigs in Bifrost graph\n")
 
-        run_bifrost_query(options.graph, query_file, options.colours, options.output, options.ratiok, options.kmer_size, options.minimizer_size, options.threads, options.inexact, options.bifrost)
+        run_bifrost_query(graph_file, query_file, colour_file, options.output, options.ratiok, options.kmer_size, options.minimizer_size, options.threads, options.inexact, options.bifrost)
+
+        sys.stderr.write("Generating rtab file\n")
+
+        rtab_format(tsv_file)
+
+        if options.pyseer == True:
+            sys.stderr.write("Generating pyseer file\n")
+            pyseer_format(tsv_file, query_file)
 
     sys.exit(0)
 
