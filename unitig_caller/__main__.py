@@ -67,18 +67,18 @@ def get_options():
                     help='Prefix for graph and colour files from build exection (file name without extension)  ')
     queryio.add_argument('--ratiok',
                         type=float,
-                        default=0.8,
-                        help='ratio of k-mers from queries that must occur in the graph to be considered as belonging to colour'
-                             '[default = 0.8]')
+                        default=1.0,
+                        help='ratio of k-mers from queries that must occur in the graph to be considered as belonging to colour '
+                             '[default = 1.0]')
     queryio.add_argument('--inexact',
                         action='store_true',
                         default=False,
-                        help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries'
+                        help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries '
                              '[default = False]')
     queryio.add_argument('--pyseer',
                         action='store_true',
                         default=False,
-                        help='Generate file compatible with pyseer analysis.'
+                        help='Generate file compatible with pyseer analysis '
                              '[default = False]')
 
     shared = parser.add_argument_group('Shared options')
@@ -89,7 +89,7 @@ def get_options():
     shared.add_argument('--kmer_size',
                         type=int,
                         default=31,
-                        help='K-mer size for graph building/querying'
+                        help='K-mer size for graph building/querying '
                              '[default = 31]')
     shared.add_argument('--minimizer_size',
                         type=int,
@@ -107,8 +107,8 @@ def get_options():
                         default='Bifrost',
                         help='Location of bifrost executable '
                              '[default = Bifrost]')
-    #other.add_argument('--version', action='version',
-    #                   version='%(prog)s '+__version__)
+    other.add_argument('--version', action='version',
+                       version='%(prog)s '+__version__)
 
     return parser.parse_args()
 
