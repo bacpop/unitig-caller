@@ -84,13 +84,13 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, no_colour = False
         bifrost_cmd += " -c"
     if clean == True:
         bifrost_cmd += " -i -d "
-        
+
     if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
         return "Please submit input files as 'reads.txt' or 'refs.txt' only"
 
-def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0.8, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
+def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 1.0, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
     """Runs query of unitigs on coloured Bifrost graph.
 
     Args:
@@ -104,7 +104,7 @@ def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0
             prefix for output file
         ratio_k (float)
             ratio of k-mers from queries that must occur in the graph
-            [default = 0.8]
+            [default = 1.0]
         kmer_size (int)
             k-mer size used for query search
             [default = 31]
@@ -134,7 +134,6 @@ def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 0
 
     if inexact == True:
         bifrost_cmd += " -n"
-
     subprocess.run(bifrost_cmd, shell=True, check=True)
 
 def gfa_to_fasta(in_file):
@@ -166,7 +165,7 @@ def rtab_format(infile):
         new_header = ["pattern_id"]
 
         for item in parsed_header:
-            base = os.path.splitext(item)[0]
+            base = os.path.splitext(os.path.basename(item))[0]
             new_header.append(base)
 
         new_header_string = '\t'.join(new_header)
