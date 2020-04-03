@@ -65,6 +65,10 @@ def get_options():
     queryio = parser.add_argument_group('Query Input/output')
     queryio.add_argument('--input',
                     help='Prefix for graph and colour files from build exection (file name without extension)  ')
+    queryio.add_argument('--fasta',
+                    default=None,
+                    help='Optional query unitigs in fasta format, not generated from .gfa file from build mode  '
+                    '[default = None]')
     queryio.add_argument('--ratiok',
                         type=float,
                         default=1.0,
@@ -123,14 +127,19 @@ def main():
 
     elif options.query:
 
-        sys.stderr.write("Creating .fasta query file from unitigs in Bifrost graph\n")
-
         graph_file = options.input + ".gfa"
-        query_file = options.input + "_unitigs.fasta"
         colour_file = options.input+ ".bfg_colors"
         tsv_file = options.output + ".tsv"
 
-        gfa_to_fasta(graph_file)
+        if options.fasta == None:
+            sys.stderr.write("Creating .fasta query file from unitigs in Bifrost graph\n")
+
+            query_file = options.input + "_unitigs.fasta"
+
+            gfa_to_fasta(graph_file)
+
+        else:
+            query_file = options.fasta
 
         sys.stderr.write("Querying unitigs in Bifrost graph\n")
 
