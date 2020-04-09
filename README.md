@@ -83,8 +83,9 @@ unitig-caller --query --input in_prefix --output out_prefix
 
 `--output` is the prefix for output files.
 
-By default, Query mode generates files in rtab format. To generate an additional
-file that is compatible with pyseer, specify `--pyseer`.
+To query unitigs that are not present in the graph, specify `--fasta` and pass a path to a .fasta file containing unitigs to query in the graph.
+
+By default, Query mode generates files in rtab format. To generate an additional file that is compatible with pyseer, specify `--pyseer`.
 
 The sensitivity of querying can be altered by passing a float argument to `--ratiok`
 (between 0 and 1, default 1.0), which determines the threshold proportion of k-mers of a
