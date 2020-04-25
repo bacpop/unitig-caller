@@ -127,22 +127,27 @@ def main():
     options = get_options()
 
     if options.build:
+        # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
+
         sys.stderr.write("Building de Bruijn graph with Bifrost\n")
 
         run_bifrost_build(options.input1, options.output, options.input2, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
 
+        sys.stderr.write("Creating .fasta file from unitigs in Bifrost graph\n")
+
+        graph_file = options.output + ".gfa"
+
+        gfa_to_fasta(graph_file)
+
     elif options.query:
+        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified, or if input2 specified, use this file for unitig querying. Call `Bifrost query`
 
         graph_file = options.input1 + ".gfa"
         colour_file = options.input1 + ".bfg_colors"
         tsv_file = options.output + ".tsv"
 
         if options.input2 == None:
-            sys.stderr.write("Creating .fasta query file from unitigs in Bifrost graph\n")
-
             query_file = options.input1 + "_unitigs.fasta"
-
-            gfa_to_fasta(graph_file)
 
         else:
             query_file = options.input2
@@ -185,7 +190,7 @@ def main():
             map_strings.call(fasta_in,
                              names_in,
                              unitigs,
-                             options.output + "_unitigs.txt",
+                             options.output + "_pyseer.txt",
                              not options.no_save_idx,
                              options.cpus)
 

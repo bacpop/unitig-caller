@@ -85,6 +85,8 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, no_colour = False
     if clean == True:
         bifrost_cmd += " -i -d "
 
+    print(bifrost_cmd)
+
     if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
@@ -134,6 +136,8 @@ def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 1
 
     if inexact == True:
         bifrost_cmd += " -n"
+
+    print(bifrost_cmd)
     subprocess.run(bifrost_cmd, shell=True, check=True)
 
 def gfa_to_fasta(in_file):
@@ -186,7 +190,7 @@ def pyseer_format(tsv, fasta):
     """
     from itertools import groupby
     base = os.path.splitext(tsv)[0]
-    outfile = base + "_pyseer.tsv"
+    outfile = base + "_pyseer.txt"
     fa = open(fasta, "r")
     faiter = (x[1] for x in groupby(fa, lambda line: line[0] == ">"))
 
