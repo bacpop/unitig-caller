@@ -8,23 +8,16 @@ import tempfile
 from multiprocessing import Pool
 from functools import partial
 
-#import map_strings
+import map_strings
 
-#from .__init__ import __version__
+from .__init__ import __version__
 
-#from .bifrost import check_bifrost_version
-#from .bifrost import run_bifrost_build
-#from .bifrost import gfa_to_fasta
-#from .bifrost import run_bifrost_query
-
-from __init__ import __version__
-
-from bifrost import check_bifrost_version
-from bifrost import run_bifrost_build
-from bifrost import gfa_to_fasta
-from bifrost import run_bifrost_query
-from bifrost import rtab_format
-from bifrost import pyseer_format
+from .bifrost import check_bifrost_version
+from .bifrost import run_bifrost_build
+from .bifrost import gfa_to_fasta
+from .bifrost import run_bifrost_query
+from .bifrost import rtab_format
+from .bifrost import pyseer_format
 
 def get_options():
     import argparse
