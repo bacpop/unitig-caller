@@ -43,14 +43,24 @@ def get_options():
                         action='store_true',
                         default=False,
                         help='Query unitig presence/absence across input genomes ')
+    mode.add_argument('--simple',
+                        action='store_true',
+                        default=False,
+                        help='Use FM-index to make calls ')
+
+    io = parser.add_argument_group('Unitig-caller input/output')
+    io.add_argument('--input1',
+                    help='Primary input for unitig caller. This is required for all modes. ')
+    io.add_argument('--input2',
+                    default=None,
+                    help='Secondary input for unitig caller. This is only required for simple mode. '
+                         '[default = None]')
+    io.add_argument('--output',
+                    default='unitig_caller',
+                    help='Prefix for output '
+                         '[default = \'unitig_caller\']')
 
     buildio = parser.add_argument_group('Build Input/output')
-    buildio.add_argument('--seq',
-                    help='List of input files in .txt format (reads or references) ')
-    buildio.add_argument('--addit_seq',
-                    default=None,
-                    help='List of additional input files in .txt format of different type to those in --seq. '
-                         '[default = None]')
     buildio.add_argument('--no_colour',
                         action='store_true',
                         default=False,
@@ -63,12 +73,6 @@ def get_options():
                              '[default = False]')
 
     queryio = parser.add_argument_group('Query Input/output')
-    queryio.add_argument('--input',
-                    help='Prefix for graph and colour files from build exection (file name without extension)  ')
-    queryio.add_argument('--fasta',
-                    default=None,
-                    help='Optional query unitigs in fasta format, not generated from .gfa file from build mode  '
-                    '[default = None]')
     queryio.add_argument('--ratiok',
                         type=float,
                         default=1.0,
@@ -85,21 +89,23 @@ def get_options():
                         help='Generate file compatible with pyseer analysis '
                              '[default = False]')
 
-    shared = parser.add_argument_group('Shared options')
-    shared.add_argument('--output',
-                    default='bifrost',
-                    help='Prefix for output '
-                         '[default = \'bifrost\']')
-    shared.add_argument('--kmer_size',
+    bifrost = parser.add_argument_group('Shared Bifrost options')
+    bifrost.add_argument('--kmer_size',
                         type=int,
                         default=31,
                         help='K-mer size for graph building/querying '
                              '[default = 31]')
-    shared.add_argument('--minimizer_size',
+    bifrost.add_argument('--minimizer_size',
                         type=int,
                         default=23,
                         help='Minimizer size to be used for k-mer hashing '
                              '[default = 23]')
+
+    simple = parser.add_argument_group('Simple mode options')
+    simple.add_argument('--no-save-idx',
+                default=False,
+                action='store_true',
+                help='Do not save FM-indexes for reuse')
 
     other = parser.add_argument_group('Other')
     other.add_argument('--threads',
@@ -123,23 +129,23 @@ def main():
     if options.build:
         sys.stderr.write("Building de Bruijn graph with Bifrost\n")
 
-        run_bifrost_build(options.seq, options.output, options.addit_seq, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
+        run_bifrost_build(options.input1, options.output, options.input2, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
 
     elif options.query:
 
-        graph_file = options.input + ".gfa"
-        colour_file = options.input+ ".bfg_colors"
+        graph_file = options.input1 + ".gfa"
+        colour_file = options.input1 + ".bfg_colors"
         tsv_file = options.output + ".tsv"
 
-        if options.fasta == None:
+        if options.input2 == None:
             sys.stderr.write("Creating .fasta query file from unitigs in Bifrost graph\n")
 
-            query_file = options.input + "_unitigs.fasta"
+            query_file = options.input1 + "_unitigs.fasta"
 
             gfa_to_fasta(graph_file)
 
         else:
-            query_file = options.fasta
+            query_file = options.input2
 
         sys.stderr.write("Querying unitigs in Bifrost graph\n")
 
@@ -152,6 +158,36 @@ def main():
         if options.pyseer == True:
             sys.stderr.write("Generating pyseer file\n")
             pyseer_format(tsv_file, query_file)
+
+    elif options.simple:
+        # Read input into lists, as in 'index' and 'call'
+
+        if options.input2 == None:
+            sys.stderr.write("Please specify a strains-list file as input 1 and unitigs file as input 2\n")
+
+        else:
+            names_in = []
+            fasta_in = []
+            with open(options.input1, 'r') as strain_file:
+                for strain_line in strain_file:
+                    (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
+                    names_in.append(strain_name)
+                    fasta_in.append(strain_fasta)
+
+            unitigs = []
+            with open(options.input2, 'r') as unitig_file:
+                unitig_file.readline() # header
+                for unitig_line in unitig_file:
+                    unitig_fields = unitig_line.rstrip().split("\t")
+                    unitigs.append(unitig_fields[0])
+
+            # call c++ code to map (also writes output file)
+            map_strings.call(fasta_in,
+                             names_in,
+                             unitigs,
+                             options.output + "_unitigs.txt",
+                             not options.no_save_idx,
+                             options.cpus)
 
     sys.exit(0)
 
