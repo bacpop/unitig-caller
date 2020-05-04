@@ -1,6 +1,6 @@
 # Copyright 2019 John Lees
 
-'''Wrapper around mantis to detect presence of sequence elements'''
+'''Wrapper around Bifrost to detect presence of sequence elements'''
 
 import os, sys
 
@@ -12,13 +12,12 @@ import map_strings
 
 from .__init__ import __version__
 
-from .squeakr import check_squeakr_version
-from .squeakr import squeakr_multi_wrapper
-
-from .mantis import check_mantis_version
-from .mantis import run_mantis_build
-from .mantis import run_mantis_index
-from .mantis import run_mantis_query
+from .bifrost import check_bifrost_version
+from .bifrost import run_bifrost_build
+from .bifrost import gfa_to_fasta
+from .bifrost import run_bifrost_query
+from .bifrost import rtab_format
+from .bifrost import pyseer_format
 
 def get_options():
     import argparse
@@ -29,79 +28,88 @@ def get_options():
 
     modeGroup = parser.add_argument_group('Mode of operation')
     mode = modeGroup.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--index',
+    mode.add_argument('--build',
                         action='store_true',
                         default=False,
-                        help='Index sequences, before calling')
-    mode.add_argument('--call',
+                        help='Build coloured/uncoloured de Bruijn graph using Bifrost ')
+    mode.add_argument('--query',
                         action='store_true',
                         default=False,
-                        help='Make calls from an indexed dataset')
+                        help='Query unitig presence/absence across input genomes ')
     mode.add_argument('--simple',
                         action='store_true',
                         default=False,
-                        help='Use FM-index to make calls')
+                        help='Use FM-index to make calls ')
 
-    io = parser.add_argument_group('Input/output')
-    io.add_argument('--strains',
-                    help='List of strains to index')
-    io.add_argument('--unitigs',
-                    help='List of unitigs to call')
+    io = parser.add_argument_group('Unitig-caller input/output')
+    io.add_argument('--input1',
+                    help='Primary input for unitig caller. This is required for all modes. ')
+    io.add_argument('--input2',
+                    default=None,
+                    help='Secondary input for unitig caller. This is only required for simple mode. '
+                         '[default = None]')
     io.add_argument('--output',
-                    default='mantis_index',
+                    default='unitig_caller',
                     help='Prefix for output '
-                         '[default = \'mantis_index\']')
-    io.add_argument('--no-save-idx',
-                    default=False,
-                    action='store_true',
-                    help='Do not save FM-indexes for reuse')
-    io.add_argument('--mantis-index',
-                    default='mantis_index',
-                    help='Directory containing mantis index '
-                         '(produced by index mode) '
-                         '[default = \'mantis_index\']')
+                         '[default = \'unitig_caller\']')
 
-    mantis = parser.add_argument_group('mantis/squeakr options')
-    mantis.add_argument('--approximate',
+    buildio = parser.add_argument_group('Build Input/output')
+    buildio.add_argument('--no_colour',
                         action='store_true',
                         default=False,
-                        help='Use approximate count mode '
-                             '[default = exact]')
-    mantis.add_argument('--kmer-size',
+                        help='Specify for uncoloured de Bruijn Graph '
+                             '[default = False]')
+    buildio.add_argument('--clean',
+                        action='store_true',
+                        default=False,
+                        help='Clean DBG (clip tips and delete isolated contigs shorter than k k-mers in length) '
+                             '[default = False]')
+
+    queryio = parser.add_argument_group('Query Input/output')
+    queryio.add_argument('--ratiok',
+                        type=float,
+                        default=1.0,
+                        help='ratio of k-mers from queries that must occur in the graph to be considered as belonging to colour '
+                             '[default = 1.0]')
+    queryio.add_argument('--inexact',
+                        action='store_true',
+                        default=False,
+                        help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries '
+                             '[default = False]')
+    queryio.add_argument('--pyseer',
+                        action='store_true',
+                        default=False,
+                        help='Generate file compatible with pyseer analysis '
+                             '[default = False]')
+
+    bifrost = parser.add_argument_group('Shared Bifrost options')
+    bifrost.add_argument('--kmer_size',
                         type=int,
                         default=31,
-                        help='K-mer size for counts '
+                        help='K-mer size for graph building/querying '
                              '[default = 31]')
-    mantis.add_argument('--count-cutoff',
+    bifrost.add_argument('--minimizer_size',
                         type=int,
-                        default=1,
-                        help='Minimum k-mer count to be included '
-                             '[default = 1]')
-    mantis.add_argument('--log-slots',
-                        type=int,
-                        default=22,
-                        help='Starting log(number of count slots). '
-                             'Automatically increased if necessary '
-                             '[default = 22]')
+                        default=23,
+                        help='Minimizer size to be used for k-mer hashing '
+                             '[default = 23]')
+
+    simple = parser.add_argument_group('Simple mode options')
+    simple.add_argument('--no-save-idx',
+                default=False,
+                action='store_true',
+                help='Do not save FM-indexes for reuse')
 
     other = parser.add_argument_group('Other')
-    other.add_argument('--cpus',
+    other.add_argument('--threads',
                         type=int,
                         default=1,
-                        help='Number of CPUs to use '
+                        help='Number of threads to use '
                              '[default = 1]')
-    other.add_argument('--overwrite',
-                        action='store_true',
-                        default=False,
-                        help='Overwrite existing output')
-    other.add_argument('--squeakr',
-                        default='squeakr',
-                        help='Location of squeakr executable '
-                             '[default = squeakr]')
-    other.add_argument('--mantis',
-                        default='mantis',
-                        help='Location of mantis executable '
-                             '[default = mantis]')
+    other.add_argument('--bifrost',
+                        default='Bifrost',
+                        help='Location of bifrost executable '
+                             '[default = Bifrost]')
     other.add_argument('--version', action='version',
                        version='%(prog)s '+__version__)
 
@@ -111,95 +119,73 @@ def get_options():
 def main():
     options = get_options()
 
-    if not options.simple:
-        mantis_major, mantis_minor, mantis_patch = check_mantis_version(options.mantis)
-        if (mantis_major == 0 and mantis_minor < 2):
-            sys.stderr.write("Requires mantis version 0.2 or higher\n")
+    if options.build:
+        # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
-    if options.index:
-        sys.stderr.write("Creating counts with squeakr\n")
+        sys.stderr.write("Building de Bruijn graph with Bifrost\n")
 
-        if (check_squeakr_version(options.squeakr) < 1):
-            sys.stderr.write("Requires squeakr version 1.0 or higher\n")
+        run_bifrost_build(options.input1, options.output, options.input2, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
 
-        squeakr_options = {'overwrite': options.overwrite,
-                           'exact': not options.approximate,
-                           'kmer_size': options.kmer_size,
-                           'count_cutoff': options.count_cutoff,
-                           'log_slots': options.log_slots,
-                           'num_threads': 1, # a pool is used instead
-                           'squeakr_exe': options.squeakr}
+        sys.stderr.write("Creating .fasta file from unitigs in Bifrost graph\n")
 
-        strains_in = []
-        output_list = tempfile.NamedTemporaryFile('w')
-        with open(options.strains, 'r') as strain_file:
-            for strain_line in strain_file:
-                (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
-                strains_in.append((strain_name, strain_fasta))
-                output_list.write(strain_name + "/" + strain_name + ".squeakr\n")
-        output_list.file.flush()
+        graph_file = options.output + ".gfa"
 
-        with Pool(processes=options.cpus) as pool:
-            pool.map(partial(squeakr_multi_wrapper,
-                             overwrite=options.overwrite,
-                             squeakr_options=squeakr_options),
-                     strains_in)
+        gfa_to_fasta(graph_file)
 
-        sys.stderr.write("Building mantis index\n")
-        run_mantis_build(output_list.name, options.output, log_slots=22, mantis_exe=options.mantis)
-        run_mantis_index(options.output, options.cpus, delete_RRR=False, mantis_exe=options.mantis)
+    elif options.query:
+        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified, or if input2 specified, use this file for unitig querying. Call `Bifrost query`
 
-        output_list.close()
+        graph_file = options.input1 + ".gfa"
+        colour_file = options.input1 + ".bfg_colors"
+        tsv_file = options.output + ".tsv"
 
-    elif options.call:
-        sys.stderr.write("Running mantis queries\n")
+        if options.input2 == None:
+            query_file = options.input1 + "_unitigs.fasta"
 
-        unitig_list_file = tempfile.NamedTemporaryFile('w')
-        unitigs = []
-        with open(options.unitigs, 'r') as unitig_file:
-            unitig_file.readline() # header
-            for unitig_line in unitig_file:
-                unitig_fields = unitig_line.rstrip().split("\t")
-                unitigs.append(unitig_fields[0])
-                unitig_list_file.write(unitig_fields[0] + "\n")
-        unitig_list_file.file.flush()
+        else:
+            query_file = options.input2
 
-        # Run query and format output as pyseer k-mers/unitigs
-        mantis_index = os.path.join(options.mantis_index, '')
-        with open(options.output + "_unitigs.txt", 'w') as call_output:
-            for unitig, samples in zip(unitigs, run_mantis_query(unitig_list_file.name,
-                                                                 mantis_index,
-                                                                 options.mantis)):
-                if len(samples) > 0:
-                    out_array = [unitig] + ["|"] + [x + ":1" for x in samples]
-                    call_output.write(" ".join(out_array) + "\n")
+        sys.stderr.write("Querying unitigs in Bifrost graph\n")
 
-        unitig_list_file.close()
+        run_bifrost_query(graph_file, query_file, colour_file, options.output, options.ratiok, options.kmer_size, options.minimizer_size, options.threads, options.inexact, options.bifrost)
+
+        sys.stderr.write("Generating rtab file\n")
+
+        rtab_format(tsv_file)
+
+        if options.pyseer == True:
+            sys.stderr.write("Generating pyseer file\n")
+            pyseer_format(tsv_file, query_file)
 
     elif options.simple:
         # Read input into lists, as in 'index' and 'call'
-        names_in = []
-        fasta_in = []
-        with open(options.strains, 'r') as strain_file:
-            for strain_line in strain_file:
-                (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
-                names_in.append(strain_name)
-                fasta_in.append(strain_fasta)
 
-        unitigs = []
-        with open(options.unitigs, 'r') as unitig_file:
-            unitig_file.readline() # header
-            for unitig_line in unitig_file:
-                unitig_fields = unitig_line.rstrip().split("\t")
-                unitigs.append(unitig_fields[0])
+        if options.input2 == None:
+            sys.stderr.write("Please specify a strains-list file as input 1 and unitigs file as input 2\n")
 
-        # call c++ code to map (also writes output file)
-        map_strings.call(fasta_in,
-                         names_in,
-                         unitigs,
-                         options.output + "_unitigs.txt",
-                         not options.no_save_idx,
-                         options.cpus)
+        else:
+            names_in = []
+            fasta_in = []
+            with open(options.input1, 'r') as strain_file:
+                for strain_line in strain_file:
+                    (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
+                    names_in.append(strain_name)
+                    fasta_in.append(strain_fasta)
+
+            unitigs = []
+            with open(options.input2, 'r') as unitig_file:
+                unitig_file.readline() # header
+                for unitig_line in unitig_file:
+                    unitig_fields = unitig_line.rstrip().split("\t")
+                    unitigs.append(unitig_fields[0])
+
+            # call c++ code to map (also writes output file)
+            map_strings.call(fasta_in,
+                             names_in,
+                             unitigs,
+                             options.output + "_pyseer.txt",
+                             not options.no_save_idx,
+                             options.cpus)
 
     sys.exit(0)
 
