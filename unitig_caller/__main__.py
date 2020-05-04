@@ -43,19 +43,17 @@ def get_options():
 
     io = parser.add_argument_group('Unitig-caller input/output')
     io.add_argument('--refs',
-                    help='Ref file to use to --build bifrost graph (or with --simple)')
+                    help='Ref file to use to --build bifrost graph (or with --simple)',
+                    default=None)
     io.add_argument('--reads',
-                    help='Read file to use to --build bifrost graph')
+                    help='Read file to use to --build bifrost graph',
+                    default=None)
     io.add_argument('--graph-prefix',
-                    help='Prefix of bifrost graph to --query')
+                    help='Prefix of bifrost graph to --query',
+                    default=None)
     io.add_argument('--unitigs',
-                    help='fasta file of unitigs to query (--query or --simple)')
-    io.add_argument('--input1',
-                    help='Primary input for unitig caller. This is required for all modes. ')
-    io.add_argument('--input2',
-                    default=None,
-                    help='Secondary input for unitig caller. This is only required for simple mode. '
-                         '[default = None]')
+                    help='fasta file of unitigs to query (--query or --simple)',
+                    default=None)
     io.add_argument('--output',
                     default='unitig_caller',
                     help='Prefix for output '
