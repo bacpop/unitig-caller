@@ -1,13 +1,18 @@
 # unitig-caller
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/unitig-caller/badges/version.svg)](https://anaconda.org/bioconda/unitig-caller)
 
 Determines presence/absence of sequence elements in bacterial sequence
 data using Bifrost Build and Query functions. Uses assemblies and/or reads as inputs.
 
-The implementation of unitig-caller is a wrapper around Bifrost (https://github.com/pmelsted/bifrost)
+The implementation of unitig-caller is a wrapper around [Bifrost](https://github.com/pmelsted/bifrost)
+which formats files for use with pyseer, as well as an implementation which calls sequences
+using an FM-index.
 
 Build mode creates a compact de Bruijn graph using Bifrost. Query mode converts the .gfa
 file produced by Build mode to a .fasta, using an associated colours file to query
 the presence of unitigs in the source genomes used to build the original de Bruijn graph.
+
+Simple mode finds presence of unitigs in a new population using an FM-index.
 
 ## Install
 
@@ -39,7 +44,7 @@ Requires [bifrost](https://github.com/pmelsted/bifrost) version 1.0.3 installed,
 via PATH (see steps for installation at Bifrost github page).
 
 ### From source
-Requires `cmake`, `pthreads` and a C++11 compiler (e.g. gcc >=4.8), in addition
+Requires `cmake`, `pthreads`, `pybind11` and a C++17 compiler (e.g. gcc >=7.3), in addition
 to the pip requirements.
 ```
 git clone https://github.com/johnlees/unitig-caller
