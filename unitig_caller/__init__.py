@@ -1,4 +1,4 @@
-# Copyright 2019 John Lees
+# Copyright 2019-2020 John Lees, Sam Horsfield
 
 '''Methods to detect presence of sequence elements, using BiFrost for DBG generation'''
 

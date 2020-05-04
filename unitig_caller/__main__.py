@@ -1,4 +1,4 @@
-# Copyright 2019 John Lees
+# Copyright 2019-2020 John Lees, Sam Horsfield
 
 '''Detect presence of sequence elements using graphs/indexes'''
 

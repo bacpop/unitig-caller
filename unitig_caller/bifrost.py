@@ -1,4 +1,5 @@
-# Copyright 2019 John Lees
+# Copyright 2019-2020 John Lees, Sam Horsfield
+
 
 '''Functions to run Bifrost'''
 

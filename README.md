@@ -132,9 +132,10 @@ be quickly loaded by subsequent runs. To turn this off use `--no-save-idx`.
 
 ### Option reference
 ```
-usage: unitig-caller [-h] (--build | --query | --simple) [--input1 INPUT1]
-                     [--input2 INPUT2] [--output OUTPUT] [--no_colour]
-                     [--clean] [--ratiok RATIOK] [--inexact] [--pyseer]
+usage: unitig-caller [-h] (--build | --query | --simple) [--refs REFS]
+                     [--reads READS] [--graph-prefix GRAPH_PREFIX]
+                     [--unitigs UNITIGS] [--output OUTPUT] [--no_colour]
+                     [--clean] [--ratiok RATIOK] [--inexact]
                      [--kmer_size KMER_SIZE] [--minimizer_size MINIMIZER_SIZE]
                      [--no-save-idx] [--threads THREADS] [--bifrost BIFROST]
                      [--version]
@@ -151,10 +152,12 @@ Mode of operation:
   --simple              Use FM-index to make calls
 
 Unitig-caller input/output:
-  --input1 INPUT1       Primary input for unitig caller. This is required for
-                        all modes.
-  --input2 INPUT2       Secondary input for unitig caller. This is only
-                        required for simple mode. [default = None]
+  --refs REFS           Ref file to use to --build bifrost graph (or with
+                        --simple)
+  --reads READS         Read file to use to --build bifrost graph
+  --graph-prefix GRAPH_PREFIX
+                        Prefix of bifrost graph to --query
+  --unitigs UNITIGS     fasta file of unitigs to query (--query or --simple)
   --output OUTPUT       Prefix for output [default = 'unitig_caller']
 
 Build Input/output:
@@ -169,10 +172,8 @@ Query Input/output:
                         = 1.0]
   --inexact             Graph is searched with exact and inexact k-mers (1
                         substitution or indel) from queries [default = False]
-  --pyseer              Generate file compatible with pyseer analysis [default
-                        = False]
 
-Shared Bifrost options:
+Bifrost options:
   --kmer_size KMER_SIZE
                         K-mer size for graph building/querying [default = 31]
   --minimizer_size MINIMIZER_SIZE
