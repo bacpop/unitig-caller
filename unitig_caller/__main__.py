@@ -1,6 +1,6 @@
 # Copyright 2019 John Lees
 
-'''Wrapper around Bifrost to detect presence of sequence elements'''
+'''Detect presence of sequence elements using graphs/indexes'''
 
 import os, sys
 
@@ -42,6 +42,14 @@ def get_options():
                         help='Use FM-index to make calls ')
 
     io = parser.add_argument_group('Unitig-caller input/output')
+    io.add_argument('--refs',
+                    help='Ref file to use to --build bifrost graph (or with --simple)')
+    io.add_argument('--reads',
+                    help='Read file to use to --build bifrost graph')
+    io.add_argument('--graph-prefix',
+                    help='Prefix of bifrost graph to --query')
+    io.add_argument('--unitigs',
+                    help='fasta file of unitigs to query (--query or --simple)')
     io.add_argument('--input1',
                     help='Primary input for unitig caller. This is required for all modes. ')
     io.add_argument('--input2',
@@ -76,13 +84,8 @@ def get_options():
                         default=False,
                         help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries '
                              '[default = False]')
-    queryio.add_argument('--pyseer',
-                        action='store_true',
-                        default=False,
-                        help='Generate file compatible with pyseer analysis '
-                             '[default = False]')
 
-    bifrost = parser.add_argument_group('Shared Bifrost options')
+    bifrost = parser.add_argument_group('Bifrost options')
     bifrost.add_argument('--kmer_size',
                         type=int,
                         default=31,
@@ -123,57 +126,68 @@ def main():
         # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
         sys.stderr.write("Building de Bruijn graph with Bifrost\n")
-
-        run_bifrost_build(options.input1, options.output, options.input2, options.no_colour, options.clean, options.kmer_size, options.minimizer_size, options.threads, options.bifrost)
+        run_bifrost_build(options.refs, 
+                          options.output, 
+                          options.reads, 
+                          options.no_colour, 
+                          options.clean, 
+                          options.kmer_size, 
+                          options.minimizer_size, 
+                          options.threads, 
+                          options.bifrost)
 
         sys.stderr.write("Creating .fasta file from unitigs in Bifrost graph\n")
-
         graph_file = options.output + ".gfa"
-
         gfa_to_fasta(graph_file)
 
     elif options.query:
-        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified, or if input2 specified, use this file for unitig querying. Call `Bifrost query`
+        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified, 
+        # or if input2 specified, use this file for unitig querying. Call `Bifrost query`
 
-        graph_file = options.input1 + ".gfa"
-        colour_file = options.input1 + ".bfg_colors"
+        graph_file = options.graph_prefix + ".gfa"
+        colour_file = options.graph_prefix + ".bfg_colors"
         tsv_file = options.output + ".tsv"
 
-        if options.input2 == None:
-            query_file = options.input1 + "_unitigs.fasta"
+        if options.unitigs == None:
+            query_file = options.graph_prefix + "_unitigs.fasta"
 
         else:
-            query_file = options.input2
+            query_file = options.unitigs
 
         sys.stderr.write("Querying unitigs in Bifrost graph\n")
-
-        run_bifrost_query(graph_file, query_file, colour_file, options.output, options.ratiok, options.kmer_size, options.minimizer_size, options.threads, options.inexact, options.bifrost)
+        run_bifrost_query(graph_file, 
+                          query_file, 
+                          colour_file, 
+                          options.output, 
+                          options.ratiok, 
+                          options.kmer_size, 
+                          options.minimizer_size, 
+                          options.threads, 
+                          options.inexact, 
+                          options.bifrost)
 
         sys.stderr.write("Generating rtab file\n")
-
         rtab_format(tsv_file)
 
-        if options.pyseer == True:
-            sys.stderr.write("Generating pyseer file\n")
-            pyseer_format(tsv_file, query_file)
+        sys.stderr.write("Generating pyseer file\n")
+        pyseer_format(tsv_file, query_file)
 
     elif options.simple:
         # Read input into lists, as in 'index' and 'call'
 
-        if options.input2 == None:
+        if options.refs == None or options.unitigs == None:
             sys.stderr.write("Please specify a strains-list file as input 1 and unitigs file as input 2\n")
-
         else:
             names_in = []
             fasta_in = []
-            with open(options.input1, 'r') as strain_file:
+            with open(options.refs, 'r') as strain_file:
                 for strain_line in strain_file:
                     (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
                     names_in.append(strain_name)
                     fasta_in.append(strain_fasta)
 
             unitigs = []
-            with open(options.input2, 'r') as unitig_file:
+            with open(options.unitigs, 'r') as unitig_file:
                 unitig_file.readline() # header
                 for unitig_line in unitig_file:
                     unitig_fields = unitig_line.rstrip().split("\t")

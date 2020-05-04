@@ -42,7 +42,7 @@ using namespace seqan3;
 typedef fm_index<true, default_sdsl_index_type> fasta_fm_index;
 
 // Constants
-const std::string VERSION = "1.0.1";
+const std::string VERSION = "1.1.0";
 
 // Structs
 
