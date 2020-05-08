@@ -60,9 +60,11 @@ There are three ways to use this package:
 
 For 1), run `--build` mode followed by `--query` mode.
 
-2) and 3) give the same results with different index tools, both finding unitigs so pyseer models can be applied to a new population. 
+Both 2) and 3) give the same results with different index tools, both finding unitigs so pyseer models can be applied to a new population. 
+
 For 2), first run `--build` mode to make a graph for the
 new population. Then run `--query` mode with this graph, but the `--unitigs` from *the original population*.
+
 For 3), run `--simple` mode giving the new genomes as `--refs` and the `--unitigs` from *the original population*. 
 
 These modes are detailed below
