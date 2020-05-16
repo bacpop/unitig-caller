@@ -124,14 +124,14 @@ def main():
         # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
         sys.stderr.write("Building de Bruijn graph with Bifrost\n")
-        run_bifrost_build(options.refs, 
-                          options.output, 
-                          options.reads, 
-                          options.no_colour, 
-                          options.clean, 
-                          options.kmer_size, 
-                          options.minimizer_size, 
-                          options.threads, 
+        run_bifrost_build(options.refs,
+                          options.output,
+                          options.reads,
+                          options.no_colour,
+                          options.clean,
+                          options.kmer_size,
+                          options.minimizer_size,
+                          options.threads,
                           options.bifrost)
 
         sys.stderr.write("Creating .fasta file from unitigs in Bifrost graph\n")
@@ -139,12 +139,13 @@ def main():
         gfa_to_fasta(graph_file)
 
     elif options.query:
-        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified, 
+        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified,
         # or if input2 specified, use this file for unitig querying. Call `Bifrost query`
 
         graph_file = options.graph_prefix + ".gfa"
         colour_file = options.graph_prefix + ".bfg_colors"
         tsv_file = options.output + ".tsv"
+        rtab_file = options.output + ".rtab"
 
         if options.unitigs == None:
             query_file = options.graph_prefix + "_unitigs.fasta"
@@ -153,22 +154,25 @@ def main():
             query_file = options.unitigs
 
         sys.stderr.write("Querying unitigs in Bifrost graph\n")
-        run_bifrost_query(graph_file, 
-                          query_file, 
-                          colour_file, 
-                          options.output, 
-                          options.ratiok, 
-                          options.kmer_size, 
-                          options.minimizer_size, 
-                          options.threads, 
-                          options.inexact, 
+        run_bifrost_query(graph_file,
+                          query_file,
+                          colour_file,
+                          options.output,
+                          options.ratiok,
+                          options.kmer_size,
+                          options.minimizer_size,
+                          options.threads,
+                          options.inexact,
                           options.bifrost)
 
         sys.stderr.write("Generating rtab file\n")
-        rtab_format(tsv_file)
+        rtab_format(tsv_file, rtab_file)
+
+        if os.path.exists(tsv_file):
+            os.remove(tsv_file)
 
         sys.stderr.write("Generating pyseer file\n")
-        pyseer_format(tsv_file, query_file)
+        pyseer_format(rtab_file, query_file)
 
     elif options.simple:
         # Read input into lists, as in 'index' and 'call'
