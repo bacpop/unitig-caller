@@ -201,7 +201,7 @@ def main():
                              unitigs,
                              options.output + "_pyseer.txt",
                              not options.no_save_idx,
-                             options.cpus)
+                             options.threads)
 
     sys.exit(0)
 
