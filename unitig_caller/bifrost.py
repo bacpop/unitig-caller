@@ -156,14 +156,14 @@ def gfa_to_fasta(in_file):
             if parsed_line[0] == "S":
                     o.write(">" + str(parsed_line[1]) + "\n" + str(parsed_line[2]) + "\n")
 
-def rtab_format(infile):
+def rtab_format(infile, outfile):
     """Converts standard .tsv Bifrost output to rtab, using same file name.
 
     Args:
         in_file (str)
             path for .tsv file to convert.
     """
-    with open(infile, "r") as f:
+    with open(infile, "r") as f, open(outfile, "w") as o:
         header = f.readline()
         parsed_header = re.split(r'\t+', header.rstrip('\t'))
         del parsed_header[0]
@@ -174,23 +174,21 @@ def rtab_format(infile):
             new_header.append(base)
 
         new_header_string = '\t'.join(new_header)
-        lines = f.readlines()
-        lines = [new_header_string + '\n'] + lines
+        o.write(new_header_string + "\n")
+        for line in f:
+            o.write(line)
 
-    with open(infile, "w") as o:
-        o.writelines(lines)
-
-def pyseer_format(tsv, fasta):
+def pyseer_format(rtab, fasta):
     """Creates pyseer file from rtab .tsv and .fasta files, using same file name as .tsv file.
 
     Args:
-        tsv (str)
-            path for rtab .tsv file containing unitig IDs and presence/absence in source genomes.
+        rtab (str)
+            path for .rtab file containing unitig IDs and presence/absence in source genomes.
         fasta (str)
             path for .fasta file containing unitigs and associated IDs, corresponding to those in rtab file.
     """
     from itertools import groupby
-    base = os.path.splitext(tsv)[0]
+    base = os.path.splitext(rtab)[0]
     outfile = base + "_pyseer.txt"
     fa = open(fasta, "r")
     faiter = (x[1] for x in groupby(fa, lambda line: line[0] == ">"))
@@ -202,7 +200,7 @@ def pyseer_format(tsv, fasta):
         fa_dict[headerstr] = seq
 
     tsv_dict = {}
-    with open(tsv, "r") as ft:
+    with open(rtab, "r") as ft:
         header = ft.readline().rstrip("\n")
         parsed_header = re.split(r'\t+', header.rstrip('\t'))
         for line in ft:

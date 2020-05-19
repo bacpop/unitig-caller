@@ -80,7 +80,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='unitig_caller',
+    name='unitig-caller',
     version=find_version("unitig_caller/__init__.py"),
     description='unitig-caller: wrapper around mantis to detect presence of sequence elements',
     long_description=long_description,
@@ -100,7 +100,7 @@ setup(
     packages=['unitig_caller'],
     entry_points={
         "console_scripts": [
-            'unitig_caller = unitig_caller.__main__:main'
+            'unitig-caller = unitig_caller.__main__:main'
             ]
     },
     ext_modules=[CMakeExtension('map_strings')],
