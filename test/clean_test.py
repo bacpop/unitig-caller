@@ -25,7 +25,6 @@ outputFiles = [
     "test_build_unitigs.fasta",
     "test_query.rtab",
     "test_query_pyseer.txt",
-    "test_unitigs_simple.fasta",
     "simple_calls_pyseer.txt"
 ]
 
