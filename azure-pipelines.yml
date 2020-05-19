@@ -24,7 +24,7 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - checkout: self
-  submodules: true
+  submodules: recursive
   displayName: 'Checkout submodules'
 
 - bash: echo "##vso[task.prependpath]$CONDA/bin"

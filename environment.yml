@@ -7,4 +7,8 @@ channels:
 dependencies:
   - python
   - pip
+  - cmake
+  - pybind11
+  - zlib
+  - bzip2
   - bifrost

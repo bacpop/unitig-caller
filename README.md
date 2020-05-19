@@ -1,4 +1,5 @@
 # unitig-caller
+[![Dev build Status](https://dev.azure.com/jlees/unitig-caller/_apis/build/status/johnlees.unitig-caller?branchName=master)](https://dev.azure.com/jlees/unitig-caller/_build/latest?definitionId=1&branchName=master)
 [![Anaconda-Server Badge](https://anaconda.org/bioconda/unitig-caller/badges/version.svg)](https://anaconda.org/bioconda/unitig-caller)
 
 Determines presence/absence of sequence elements in bacterial sequence
