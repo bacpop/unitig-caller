@@ -84,6 +84,7 @@ setup(
     version=find_version("unitig_caller/__init__.py"),
     description='unitig-caller: wrapper around mantis to detect presence of sequence elements',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/johnlees/unitig-caller',
     author='John Lees',
     author_email='john@johnlees.me',
