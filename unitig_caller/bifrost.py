@@ -91,7 +91,8 @@ def run_bifrost_build(in_file, out_file, addit_in_file = None, no_colour = False
     if any(item in str(bifrost_cmd) for item in [' -r ', ' -s ']):
         subprocess.run(bifrost_cmd, shell=True, check=True)
     else:
-        return "Please submit input files as 'reads.txt' or 'refs.txt' only"
+        sys.stderr.write("Please submit input files as 'reads.txt' or 'refs.txt' only\n")
+        sys.exit(1)
 
 def run_bifrost_query(graph_file, query_file, colour_file, out_file, ratio_k = 1.0, kmer_size = 31, minimizer_size = 23, threads = 1, inexact = False, bifrost_exe='Bifrost'):
     """Runs query of unitigs on coloured Bifrost graph.
