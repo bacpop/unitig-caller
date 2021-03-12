@@ -70,7 +70,7 @@ void call_strings(const std::vector<std::string>& assembly_list,
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
       // debug_stream << *unitig_it << std::endl;
-      dna5_vector query{*unitig_it | view::char_to<dna5>};
+      dna5_vector query{*unitig_it | seqan3::view::char_to<dna5>};
 
       for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
       {
