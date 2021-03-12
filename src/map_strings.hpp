@@ -23,26 +23,38 @@
 #include <experimental/filesystem>
 
 // pybind11 headers
-//#include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 // seqan3 headers
 #include <seqan3/core/debug_stream.hpp>
-#include <seqan3/alphabet/all.hpp>
-#include <seqan3/range/view/all.hpp>
-#include <seqan3/std/ranges>
-#include <seqan3/io/sequence_file/all.hpp>
-#include <seqan3/search/fm_index/fm_index.hpp>
-#include <seqan3/search/algorithm/search.hpp>
+#include <seqan3/search/fm_index/all.hpp>
 #include <cereal/archives/binary.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/io/sequence_file/all.hpp>
+#include <seqan3/range/views/all.hpp>
+#include <seqan3/search/search.hpp>
+#include <seqan3/std/filesystem>
+#include <seqan3/std/ranges>
 
 // Bifrost headers
 #include <bifrost/ColoredCDBG.hpp>
 
-//namespace py = pybind11;
-using namespace seqan3;
+namespace py = pybind11;
+//using namespace seqan3;
 
-typedef fm_index<true, default_sdsl_index_type> fasta_fm_index;
+// fmindex typedef
+using cust_sdsl_wt_index_type = sdsl::csa_wt<sdsl::wt_blcd<sdsl::bit_vector,
+        sdsl::rank_support_v<>,
+        sdsl::select_support_scan<>,
+        sdsl::select_support_scan<0>>,
+        16,
+        10000000,
+        sdsl::sa_order_sa_sampling<>,
+        sdsl::isa_sampling<>,
+        sdsl::plain_byte_alphabet>;
+typedef seqan3::fm_index<seqan3::dna5, seqan3::text_layout::collection, cust_sdsl_wt_index_type> fasta_fm_index;
+using seqan3::operator""_dna5;
 
 // Constants
 const std::string VERSION = "1.1.0";
@@ -61,8 +73,8 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
                                         const size_t start,
                                         const size_t end,
                                         const bool write_idx = 1);
-std::vector<std::string> seq_search(const dna5_vector& query,
-                                    const std::vector<fasta_fm_index>& sequences,
+std::vector<std::string> seq_search(const seqan3::dna5_vector& query,
+                                    const std::vector<fasta_fm_index>& seq_idx,
                                     const std::vector<std::string>& names,
                                     const size_t start,
                                     const size_t end);
@@ -105,8 +117,8 @@ int py_call_strings(std::vector<std::string> assembly_list,
                     std::vector<std::string> assembly_names,
                     std::vector<std::string> query_list,
                     std::string output_file,
-                    bool write_idx,
-                    size_t num_threads);
+                    bool write_idx = 1,
+                    size_t num_threads = 1);
 
 std::pair<std::unordered_map<std::string, std::vector<bool>>,
         std::vector<std::string>> py_uc_call_exists (const std::string& graphfile,
@@ -135,5 +147,3 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
                                                      bool is_ref,
                                                      const bool write_graph,
                                                      const std::string& infile2);
-
-

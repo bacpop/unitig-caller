@@ -11,7 +11,12 @@ find_package(Threads REQUIRED)
 IF( DEFINED ENV{CONDA_PREFIX} )
   # set conda directory
   SET(CONDA_DIR "$ENV{CONDA_PREFIX}")
+  # find Seqan3 packages
+  find_path(SEQAN3_CLONE_DIR name bin PATHS ${CONDA_DIR} NO_DEFAULT_PATH)
+  find_path(SEQAN3_INCLUDE_DIR name seqan PATHS ${SEQAN3_CLONE_DIR}/include NO_DEFAULT_PATH)
+  find_path(SEQAN3_SUBMODULES_DIR name submodules PATHS ${SEQAN3_INCLUDE_DIR}/seqan3 NO_DEFAULT_PATH)
 ENDIF()
+
 
 #Find include dirs for z and bifrost
 FIND_PATH(z_INCLUDE_DIR NAMES zlib.h HINTS ${CONDA_DIR}/include)
@@ -32,8 +37,7 @@ SET( bifrost_INCLUDE_DIRS ${z_INCLUDE_DIR} )
 SET( bifrost_LIBRARIES ${bifrost_LIBRARY} )
 
 # find SeqAn3 packages
-set(SeqAn3_DIR "${CMAKE_SOURCE_DIR}/seqan3/build_system")
-find_package (SeqAn3 REQUIRED)
+find_package(SeqAn3 REQUIRED HINTS ${CONDA_DIR}/share/cmake/seqan3)
 
 find_package(pybind11 REQUIRED)
 pybind11_add_module(map_strings src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
