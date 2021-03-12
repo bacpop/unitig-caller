@@ -28,6 +28,7 @@ def rtab_format(unitig_map, input_colour_pref, outfile):
         for unitig, colours_vector in unitig_map.items():
             o.write(unitig)
             for index, colour in enumerate(colours_vector):
+                colour = int(colour == True)
                 o.write("\t" + str(colour))
                 if index == len(colours_vector) - 1:
                     o.write("\n")

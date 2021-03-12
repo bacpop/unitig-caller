@@ -39,10 +39,10 @@ def get_options():
 
     io = parser.add_argument_group('Unitig-caller input/output')
     io.add_argument('--refs',
-                    help='Ref file to use to build DBG or use with --simple',
+                    help='Ref file to used to build DBG or use with --simple',
                     default=None)
     io.add_argument('--reads',
-                    help='Read file to use to build DBG',
+                    help='Read file to used to build DBG',
                     default=None)
     io.add_argument('--graph',
                     help='Existing graph in GFA format',
@@ -74,9 +74,8 @@ def get_options():
                              '[default = 31]')
     bifrost.add_argument('--write-graph',
                         action='store_true',
-                        type=bool,
                         default=False,
-                        help='Output DBG is built with unitig-caller')
+                        help='Output DBG built with unitig-caller')
 
     simple = parser.add_argument_group('Simple mode options')
     simple.add_argument('--no-save-idx',
@@ -100,54 +99,53 @@ def main():
     options = get_options()
 
     if options.call or options.query:
-        if options.call and options.graph != None and graph.colours != None and options.refs == None and options.reads == None:
+        if options.call and options.graph != None and options.colours != None and options.refs == None and options.reads == None:
             # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
             sys.stderr.write("Calling unitigs within input genomes...\n")
             unitig_map, input_colour_pref = map_strings.call_unitigs_existing(options.graph, options.colours, options.threads)
 
-        elif options.call and (options.refs != None or options.reads != None) and options.graph == None and graph.colours == None:
+        elif options.call and (options.refs != None or options.reads != None) and options.graph == None and options.colours == None:
 
             sys.stderr.write("Building a DBG and calling unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, true, options.write_graph)
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.reads, options.kmer, options.threads, false, options.write_graph)
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.reads, options.kmer, options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, false, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, False, options.write_graph, options.reads)
 
-        elif options.query and options.graph != None and graph.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
+        elif options.query and options.graph != None and options.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
 
             sys.stderr.write("Querying unitigs within existing DBG...\n")
             unitig_map, input_colour_pref = map_strings.query_unitigs_existing(options.graph, options.colours, options.unitigs, options.threads)
 
-        elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and graph.colours == None:
+        elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and options.colours == None:
             sys.stderr.write("Building a DBG and querying unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, true, options.write_graph)
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, false, options.write_graph)
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, false, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, False, options.write_graph, options.reads)
 
         else:
-          print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
-                "For call: "
-                "   - Bifrost GFA and Bifrost colours file\n"
-                "   - List of reference files\n"
-                "   - List of read files\n"
-                "   - A list of reference files and a list of read files."
-                "For query:"
-                "   - One of the above combinations with a text/fasta file of query unitigs")
-        sys.exit(1)
-
+            print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
+                "For --call:\n"
+                "   - Bifrost GFA and Bifrost colours file (--graph & --colours)\n"
+                "   - List of reference files (--refs)\n"
+                "   - List of read files (--reads)\n"
+                "   - A list of reference files and a list of read files (--refs & --reads)\n"
+                "For --query:\n"
+                "   - One of the above combinations with a text file with header, one file per line/fasta file of query unitigs (--unitigs)\n")
+            sys.exit(1)
 
         if options.pyseer or (not options.pyseer and not options.rtab):
-            sys.stderr.write("Generating pyseer file...")
+            sys.stderr.write("Generating pyseer file...\n")
             pyseer_format(unitig_map, input_colour_pref, options.out + ".pyseer")
 
         if options.rtab:
-            sys.stderr.write("Generating rtab file...")
+            sys.stderr.write("Generating rtab file...\n")
             rtab_format(unitig_map, input_colour_pref, options.out + ".rtab")
 
     elif options.simple:
@@ -161,9 +159,9 @@ def main():
             fasta_in = []
             with open(options.refs, 'r') as strain_file:
                 for strain_line in strain_file:
-                    (strain_name, strain_fasta) = strain_line.rstrip().split("\t")
-                    names_in.append(strain_name)
-                    fasta_in.append(strain_fasta)
+                    strain_line = strain_line.rstrip()
+                    names_in.append(os.path.splitext(os.path.basename(strain_line))[0])
+                    fasta_in.append(strain_line)
 
             unitigs = []
             with open(options.unitigs, 'r') as unitig_file:
@@ -177,12 +175,13 @@ def main():
             map_strings.call(fasta_in,
                              names_in,
                              unitigs,
-                             options.output + ".pyseer",
+                             options.out + ".pyseer",
                              not options.no_save_idx,
                              options.threads)
 
     else:
-
+        sys.stderr.write("Error: Please specify one of: build, query or simple modes. Use -h or --help for more information.\n")
+        sys.exit(1)
 
     sys.exit(0)
 
