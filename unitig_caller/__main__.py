@@ -12,10 +12,6 @@ import map_strings
 
 from .__init__ import __version__
 
-from .bifrost import check_bifrost_version
-from .bifrost import run_bifrost_build
-from .bifrost import gfa_to_fasta
-from .bifrost import run_bifrost_query
 from .bifrost import rtab_format
 from .bifrost import pyseer_format
 
@@ -28,14 +24,14 @@ def get_options():
 
     modeGroup = parser.add_argument_group('Mode of operation')
     mode = modeGroup.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--build',
+    mode.add_argument('--call',
                         action='store_true',
                         default=False,
-                        help='Build coloured/uncoloured de Bruijn graph using Bifrost ')
+                        help='Build a DBG and call colours of untigs within ')
     mode.add_argument('--query',
                         action='store_true',
                         default=False,
-                        help='Query unitig presence/absence across input genomes ')
+                        help='Query unitig colours in reference genomes/DBG ')
     mode.add_argument('--simple',
                         action='store_true',
                         default=False,
@@ -43,57 +39,44 @@ def get_options():
 
     io = parser.add_argument_group('Unitig-caller input/output')
     io.add_argument('--refs',
-                    help='Ref file to use to --build bifrost graph (or with --simple)',
+                    help='Ref file to use to build DBG or use with --simple',
                     default=None)
     io.add_argument('--reads',
-                    help='Read file to use to --build bifrost graph',
+                    help='Read file to use to build DBG',
                     default=None)
-    io.add_argument('--graph-prefix',
-                    help='Prefix of bifrost graph to --query',
+    io.add_argument('--graph',
+                    help='Existing graph in GFA format',
+                    default=None)
+    io.add_argument('--colours',
+                    help='Existing bifrost colours file in .bfg_colors format',
                     default=None)
     io.add_argument('--unitigs',
-                    help='fasta file of unitigs to query (--query or --simple)',
+                    help='Text or fasta file of unitigs to query (--query or --simple)',
                     default=None)
-    io.add_argument('--output',
+    io.add_argument('--pyseer',
+                    action='store_true',
+                    help='Output pyseer format',
+                    default=False)
+    io.add_argument('--rtab',
+                    action='store_true',
+                    help='Output rtab format',
+                    default=False)
+    io.add_argument('--out',
                     default='unitig_caller',
                     help='Prefix for output '
                          '[default = \'unitig_caller\']')
 
-    buildio = parser.add_argument_group('Build Input/output')
-    buildio.add_argument('--no_colour',
-                        action='store_true',
-                        default=False,
-                        help='Specify for uncoloured de Bruijn Graph '
-                             '[default = False]')
-    buildio.add_argument('--clean',
-                        action='store_true',
-                        default=False,
-                        help='Clean DBG (clip tips and delete isolated contigs shorter than k k-mers in length) '
-                             '[default = False]')
-
-    queryio = parser.add_argument_group('Query Input/output')
-    queryio.add_argument('--ratiok',
-                        type=float,
-                        default=1.0,
-                        help='ratio of k-mers from queries that must occur in the graph to be considered as belonging to colour '
-                             '[default = 1.0]')
-    queryio.add_argument('--inexact',
-                        action='store_true',
-                        default=False,
-                        help='Graph is searched with exact and inexact k-mers (1 substitution or indel) from queries '
-                             '[default = False]')
-
     bifrost = parser.add_argument_group('Bifrost options')
-    bifrost.add_argument('--kmer_size',
+    bifrost.add_argument('--kmer',
                         type=int,
                         default=31,
                         help='K-mer size for graph building/querying '
                              '[default = 31]')
-    bifrost.add_argument('--minimizer_size',
-                        type=int,
-                        default=23,
-                        help='Minimizer size to be used for k-mer hashing '
-                             '[default = 23]')
+    bifrost.add_argument('--write-graph',
+                        action='store_true',
+                        type=bool,
+                        default=False,
+                        help='Output DBG is built with unitig-caller')
 
     simple = parser.add_argument_group('Simple mode options')
     simple.add_argument('--no-save-idx',
@@ -107,10 +90,6 @@ def get_options():
                         default=1,
                         help='Number of threads to use '
                              '[default = 1]')
-    other.add_argument('--bifrost',
-                        default='Bifrost',
-                        help='Location of bifrost executable '
-                             '[default = Bifrost]')
     other.add_argument('--version', action='version',
                        version='%(prog)s '+__version__)
 
@@ -120,65 +99,63 @@ def get_options():
 def main():
     options = get_options()
 
-    if options.build:
-        # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
+    if options.call or options.query:
+        if options.call and options.graph != None and graph.colours != None and options.refs == None and options.reads == None:
+            # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
-        sys.stderr.write("Building de Bruijn graph with Bifrost\n")
-        run_bifrost_build(options.refs,
-                          options.output,
-                          options.reads,
-                          options.no_colour,
-                          options.clean,
-                          options.kmer_size,
-                          options.minimizer_size,
-                          options.threads,
-                          options.bifrost)
+            sys.stderr.write("Calling unitigs within input genomes...\n")
+            unitig_map, input_colour_pref = map_strings.call_unitigs_existing(options.graph, options.colours, options.threads)
 
-        sys.stderr.write("Creating .fasta file from unitigs in Bifrost graph\n")
-        graph_file = options.output + ".gfa"
-        gfa_to_fasta(graph_file)
+        elif options.call and (options.refs != None or options.reads != None) and options.graph == None and graph.colours == None:
 
-    elif options.query:
-        # Read files with prefix input1 as gfa, colours file and fasta file if input2 not specified,
-        # or if input2 specified, use this file for unitig querying. Call `Bifrost query`
+            sys.stderr.write("Building a DBG and calling unitigs within...\n")
+            if options.refs != None and options.reads == None:
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, true, options.write_graph)
+            elif options.refs == None and options.reads != None:
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.reads, options.kmer, options.threads, false, options.write_graph)
+            elif options.refs != None and options.reads != None:
+                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, false, options.write_graph, options.reads)
 
-        graph_file = options.graph_prefix + ".gfa"
-        colour_file = options.graph_prefix + ".bfg_colors"
-        tsv_file = options.output + ".tsv"
-        rtab_file = options.output + ".rtab"
+        elif options.query and options.graph != None and graph.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
 
-        if options.unitigs == None:
-            query_file = options.graph_prefix + "_unitigs.fasta"
+            sys.stderr.write("Querying unitigs within existing DBG...\n")
+            unitig_map, input_colour_pref = map_strings.query_unitigs_existing(options.graph, options.colours, options.unitigs, options.threads)
+
+        elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and graph.colours == None:
+            sys.stderr.write("Building a DBG and querying unitigs within...\n")
+            if options.refs != None and options.reads == None:
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, true, options.write_graph)
+            elif options.refs == None and options.reads != None:
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, false, options.write_graph)
+            elif options.refs != None and options.reads != None:
+                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, false, options.write_graph, options.reads)
 
         else:
-            query_file = options.unitigs
+          print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
+                "For call: "
+                "   - Bifrost GFA and Bifrost colours file\n"
+                "   - List of reference files\n"
+                "   - List of read files\n"
+                "   - A list of reference files and a list of read files."
+                "For query:"
+                "   - One of the above combinations with a text/fasta file of query unitigs")
+        sys.exit(1)
 
-        sys.stderr.write("Querying unitigs in Bifrost graph\n")
-        run_bifrost_query(graph_file,
-                          query_file,
-                          colour_file,
-                          options.output,
-                          options.ratiok,
-                          options.kmer_size,
-                          options.minimizer_size,
-                          options.threads,
-                          options.inexact,
-                          options.bifrost)
 
-        sys.stderr.write("Generating rtab file\n")
-        rtab_format(tsv_file, rtab_file)
+        if options.pyseer or (not options.pyseer and not options.rtab):
+            sys.stderr.write("Generating pyseer file...")
+            pyseer_format(unitig_map, input_colour_pref, options.out + ".pyseer")
 
-        if os.path.exists(tsv_file):
-            os.remove(tsv_file)
-
-        sys.stderr.write("Generating pyseer file\n")
-        pyseer_format(rtab_file, query_file)
+        if options.rtab:
+            sys.stderr.write("Generating rtab file...")
+            rtab_format(unitig_map, input_colour_pref, options.out + ".rtab")
 
     elif options.simple:
         # Read input into lists, as in 'index' and 'call'
 
         if options.refs == None or options.unitigs == None:
-            sys.stderr.write("Please specify a strains-list file as input 1 and unitigs file as input 2\n")
+            sys.stderr.write("Error: Please specify a strains-list file as --refs and unitigs file as --unitigs\n")
+            sys.exit(1)
         else:
             names_in = []
             fasta_in = []
@@ -192,16 +169,20 @@ def main():
             with open(options.unitigs, 'r') as unitig_file:
                 unitig_file.readline() # header
                 for unitig_line in unitig_file:
-                    unitig_fields = unitig_line.rstrip().split("\t")
-                    unitigs.append(unitig_fields[0])
+                    if unitig_line[0] != '>':
+                        unitig_fields = unitig_line.rstrip().split("\t")
+                        unitigs.append(unitig_fields[0])
 
             # call c++ code to map (also writes output file)
             map_strings.call(fasta_in,
                              names_in,
                              unitigs,
-                             options.output + "_pyseer.txt",
+                             options.output + ".pyseer",
                              not options.no_save_idx,
                              options.threads)
+
+    else:
+
 
     sys.exit(0)
 

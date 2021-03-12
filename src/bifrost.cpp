@@ -114,6 +114,10 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
     std::vector<std::string> seq_list;
     std::string line, DNA_sequence;
     std::ifstream infile(fasta);
+
+    // ignore header
+    std::getline(infile, line);
+
     // parse fasta
     while (std::getline(infile, line)) {
         // remove new line characters
@@ -248,25 +252,25 @@ std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDB
 }
 
 
-void print_unitigs (const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>>& return_pair,
-        const std::string& outfile_name)
-{
-    ofstream outfile;
-    outfile.open(outfile_name);
-
-    cout << "Printing unitigs..." << endl;
-
-    for (const auto& unitig : return_pair.first)
-    {
-        // generate string for colours
-        std::string colours;
-        for (const auto& i : unitig.second)
-        {
-            colours += std::to_string(i);
-        }
-        // append to file
-        outfile << unitig.first << "\t" << colours << "\n";
-    }
-
-    outfile.close();
-}
+// void print_unitigs (const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>>& return_pair,
+//         const std::string& outfile_name)
+// {
+//     ofstream outfile;
+//     outfile.open(outfile_name);
+//
+//     cout << "Printing unitigs..." << endl;
+//
+//     for (const auto& unitig : return_pair.first)
+//     {
+//         // generate string for colours
+//         std::string colours;
+//         for (const auto& i : unitig.second)
+//         {
+//             colours += std::to_string(i);
+//         }
+//         // append to file
+//         outfile << unitig.first << "\t" << colours << "\n";
+//     }
+//
+//     outfile.close();
+// }
