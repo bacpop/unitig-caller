@@ -13,7 +13,7 @@ IF( DEFINED ENV{CONDA_PREFIX} )
   SET(CONDA_DIR "$ENV{CONDA_PREFIX}")
 ENDIF()
 
-Find include dirs for z and bifrost
+#Find include dirs for z and bifrost
 FIND_PATH(z_INCLUDE_DIR NAMES zlib.h HINTS ${CONDA_DIR}/include)
 FIND_PATH(bifrost_INCLUDE_DIR bifrost/CompactedDBG.hpp HINTS ${CONDA_DIR}/include)
 
