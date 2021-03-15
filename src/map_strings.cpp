@@ -120,7 +120,7 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
 
       // Read index if it already exists
       fasta_fm_index ref_index;
-      if (std::experimental::filesystem::exists(idx_file_name))
+      if (std::filesystem::exists(idx_file_name))
       {
          {
             std::ifstream is{idx_file_name, std::ios::binary};
