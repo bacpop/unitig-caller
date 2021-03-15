@@ -98,7 +98,7 @@ Call mode automatically generates a .pyseer file containing unitigs found within
 formats can be specified with `--rtab` and `--pyseer` respectively.
 
 ### Running Query mode
-Queries existing unitigs in a Bifrost graph.
+Queries existing unitigs in a Bifrost graph. This is useful when identical unitig definitions need to be used between populations, for example when using pyseer's prediction mode.
 
 #### If no pre-built Bifrost graph exists
 ```
