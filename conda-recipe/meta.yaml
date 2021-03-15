@@ -24,9 +24,15 @@ requirements:
     - python >=3
     - cmake
     - pybind11
+    - seqan3
+    - bifrost
+    - pthread-stubs
+    - zlib
+    - bzip2
   run:
     - mantis >=0.2.0
     - squeakr >=0.6
+    - bifrost
 
 test:
   imports:
