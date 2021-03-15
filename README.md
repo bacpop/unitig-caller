@@ -88,7 +88,7 @@ files to remove sequencing errors.
 unitig-caller --call --graph graph.gfa --colours graph.bfg_colors --out out_prefix
 ```
 
-`--graph` is a pre-built bifrost graph .gfa, and `--colours` is it's associated colours file.
+`--graph` is a pre-built bifrost graph .gfa, and `--colours` is its associated colours file.
 
 #### For both call modes
 
@@ -98,14 +98,14 @@ Call mode automatically generates a .pyseer file containing unitigs found within
 formats can be specified with `--rtab` and `--pyseer` respectively.
 
 ### Running Query mode
-Queries existing unitigs in a Bifrost graph.
+Queries existing unitigs in a Bifrost graph. This is useful when identical unitig definitions need to be used between populations, for example when using pyseer's prediction mode.
 
 #### If no pre-built Bifrost graph exists
 ```
 unitig-caller --query --refs refs.txt --reads reads.txt --unitigs query_unitigs.fasta --out out_prefix
 ```
 
-`refs` and `reads` are the same arguments as in `call`.
+`--refs` and `--reads` are the same arguments as in `--call`.
 
 `--kmer` can be specified for the kmer size used to built the graph. By default this is 31 bp.
 

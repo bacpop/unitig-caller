@@ -26,8 +26,8 @@ ColoredCDBG<> buildGraph (const std::string& infile_1,
         {
             opt.filename_ref_in.push_back(filename);
         }
-    } else if (!is_ref && (infile_2 == "NA"))
-    {
+    } else if (!is_ref && (infile_2 == "NA")) {
+
         while (std::getline(infile1, filename))
         {
             opt.filename_seq_in.push_back(filename);
