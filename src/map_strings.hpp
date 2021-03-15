@@ -56,10 +56,8 @@ using cust_sdsl_wt_index_type = sdsl::csa_wt<sdsl::wt_blcd<sdsl::bit_vector,
 typedef seqan3::fm_index<seqan3::dna5, seqan3::text_layout::collection, cust_sdsl_wt_index_type> fasta_fm_index;
 using seqan3::operator""_dna5;
 
-// Constants
-const std::string VERSION = "1.1.0";
-
-// Structs
+// return pair typedef
+typedef std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> ReturnPair;
 
 // Function headers
 // map_strings.cpp
@@ -109,9 +107,6 @@ std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& q
 // call unitigs and return their colours within a graph
 std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDBG<>& ccdbg);
 
-void print_unitigs (const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>>& return_pair,
-                    const std::string& outfile_name);
-
 // map_bindings.cpp
 int py_call_strings(std::vector<std::string> assembly_list,
                     std::vector<std::string> assembly_names,
@@ -120,27 +115,23 @@ int py_call_strings(std::vector<std::string> assembly_list,
                     bool write_idx = 1,
                     size_t num_threads = 1);
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_call_exists (const std::string& graphfile,
+ReturnPair py_uc_call_exists (const std::string& graphfile,
                                                      const std::string& coloursfile,
                                                      size_t num_threads);
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_call_build (const std::string& infile1,
+ReturnPair py_uc_call_build (const std::string& infile1,
                                                     const int& kmer,
                                                     size_t num_threads,
                                                     bool is_ref,
                                                     const bool write_graph,
                                                     const std::string& infile2);
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_query_exists (const std::string& graphfile,
+ReturnPair py_uc_query_exists (const std::string& graphfile,
                                                       const std::string& coloursfile,
                                                       const std::string& query_file,
                                                       size_t num_threads);
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_query_build (const std::string& infile1,
+ReturnPair py_uc_query_build (const std::string& infile1,
                                                      const int& kmer,
                                                      const std::string& query_file,
                                                      size_t num_threads,

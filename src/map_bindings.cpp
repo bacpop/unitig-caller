@@ -31,8 +31,7 @@ int py_call_strings(std::vector<std::string> assembly_list,
     return 1;
 }
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_call_exists (const std::string& graphfile,
+ReturnPair py_uc_call_exists (const std::string& graphfile,
                                                      const std::string& coloursfile,
                                                      size_t num_threads) {
     // Set number of threads
@@ -61,13 +60,12 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     }
 
     auto unitig_map = call_unitigs(ccdbg);
-    const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> return_pair = std::make_pair(unitig_map, input_colour_pref);
+    const ReturnPair return_pair = std::make_pair(unitig_map, input_colour_pref);
 
     return return_pair;
 }
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_call_build (const std::string& infile1,
+ReturnPair py_uc_call_build (const std::string& infile1,
                                                     const int& kmer,
                                                     size_t num_threads,
                                                     bool is_ref,
@@ -85,12 +83,10 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
         is_ref = 0;
     }
 
-    ColoredCDBG<> ccdbg;
-
     // build graph, write graph if specified
     size_t lastindex = infile1.find_last_of(".");
     std::string outgraph = infile1.substr(0, lastindex);
-    ccdbg = buildGraph(infile1, infile2, is_ref, kmer, num_threads, false, write_graph, outgraph);
+    ColoredCDBG<> ccdbg = buildGraph(infile1, infile2, is_ref, kmer, num_threads, false, write_graph, outgraph);
 
     cout << "Calling unitigs within population..." << endl;
 
@@ -106,13 +102,12 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     }
 
     auto unitig_map = call_unitigs(ccdbg);
-    const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> return_pair = std::make_pair(unitig_map, input_colour_pref);
+    const ReturnPair return_pair = std::make_pair(unitig_map, input_colour_pref);
 
     return return_pair;
 }
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_query_exists (const std::string& graphfile,
+ReturnPair py_uc_query_exists (const std::string& graphfile,
                                                       const std::string& coloursfile,
                                                       const std::string& query_file,
                                                       size_t num_threads) {
@@ -159,13 +154,12 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
         input_colour_pref.push_back(p.stem());
     }
 
-    const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> return_pair = std::make_pair(query_colours_map, input_colour_pref);
+    const ReturnPair return_pair = std::make_pair(query_colours_map, input_colour_pref);
 
     return return_pair;
 }
 
-std::pair<std::unordered_map<std::string, std::vector<bool>>,
-        std::vector<std::string>> py_uc_query_build (const std::string& infile1,
+ReturnPair py_uc_query_build (const std::string& infile1,
                                                      const int& kmer,
                                                      const std::string& query_file,
                                                      size_t num_threads,
@@ -184,12 +178,10 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
         is_ref = 0;
     }
 
-    ColoredCDBG<> ccdbg;
-
     // build graph, write graph if specified
     size_t lastindex = infile1.find_last_of(".");
     std::string outgraph = infile1.substr(0, lastindex);
-    ccdbg = buildGraph(infile1, infile2, is_ref, kmer, num_threads, false, write_graph, outgraph);
+    ColoredCDBG<> ccdbg = buildGraph(infile1, infile2, is_ref, kmer, num_threads, false, write_graph, outgraph);
 
     std::vector<std::string> query_list = parse_fasta(query_file);
 
@@ -219,7 +211,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
         input_colour_pref.push_back(p.stem());
     }
 
-    const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> return_pair = std::make_pair(query_colours_map, input_colour_pref);
+    const ReturnPair return_pair = std::make_pair(query_colours_map, input_colour_pref);
 
     return return_pair;
 }

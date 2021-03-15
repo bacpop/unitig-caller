@@ -129,7 +129,9 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 
         // line may be empty so you *must* ignore blank lines
         if (line.empty())
-            continue;
+        {
+          continue;
+        }
 
         if (line[0] != '>') {
             DNA_sequence = line;
@@ -137,7 +139,9 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 
         // add to seq list
         if (DNA_sequence.size() != 0)
-            seq_list.push_back(DNA_sequence);
+        {
+          seq_list.push_back(DNA_sequence);
+        }
     }
 
     return seq_list;
@@ -224,7 +228,7 @@ std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDB
     // get the number of colours
     const size_t nb_colours = ccdbg.getNbColors();
 
-    for (const auto um : ccdbg)
+    for (const auto& um : ccdbg)
     {
         // get tail kmer position as len of unitig in kmers minus 1 (zero basedness)
         const int tail_pos = um.len - 1;
@@ -250,27 +254,3 @@ std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDB
 
     return unitig_map;
 }
-
-
-// void print_unitigs (const std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>>& return_pair,
-//         const std::string& outfile_name)
-// {
-//     ofstream outfile;
-//     outfile.open(outfile_name);
-//
-//     cout << "Printing unitigs..." << endl;
-//
-//     for (const auto& unitig : return_pair.first)
-//     {
-//         // generate string for colours
-//         std::string colours;
-//         for (const auto& i : unitig.second)
-//         {
-//             colours += std::to_string(i);
-//         }
-//         // append to file
-//         outfile << unitig.first << "\t" << colours << "\n";
-//     }
-//
-//     outfile.close();
-// }
