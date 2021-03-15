@@ -88,7 +88,7 @@ files to remove sequencing errors.
 unitig-caller --call --graph graph.gfa --colours graph.bfg_colors --out out_prefix
 ```
 
-`--graph` is a pre-built bifrost graph .gfa, and `--colours` is it's associated colours file.
+`--graph` is a pre-built bifrost graph .gfa, and `--colours` is its associated colours file.
 
 #### For both call modes
 
