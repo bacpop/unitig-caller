@@ -224,7 +224,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     return return_pair;
 }
 
-PYBIND11_MODULE(map_strings, m)
+PYBIND11_MODULE(unitig_query, m)
 {
   m.doc() = "Finds presence/absence of substrings";
 

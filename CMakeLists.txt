@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-project(map_strings)
+project(unitig_query)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts -march=native")
 
@@ -40,6 +40,6 @@ SET( bifrost_LIBRARIES ${bifrost_LIBRARY} )
 find_package(SeqAn3 REQUIRED HINTS ${CONDA_DIR}/share/cmake/seqan3)
 
 find_package(pybind11 REQUIRED)
-pybind11_add_module(map_strings src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
+pybind11_add_module(unitig_query src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
 
-target_link_libraries(map_strings PRIVATE seqan3::seqan3 ${bifrost_LIBRARIES} ${z_LIBRARIES} Threads::Threads)
+target_link_libraries(unitig_query PRIVATE seqan3::seqan3 ${bifrost_LIBRARIES} ${z_LIBRARIES} Threads::Threads)

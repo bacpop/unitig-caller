@@ -8,7 +8,7 @@ import tempfile
 from multiprocessing import Pool
 from functools import partial
 
-import map_strings
+import unitig_query
 
 from .__init__ import __version__
 
@@ -103,31 +103,31 @@ def main():
             # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
             sys.stderr.write("Calling unitigs within input genomes...\n")
-            unitig_map, input_colour_pref = map_strings.call_unitigs_existing(options.graph, options.colours, options.threads)
+            unitig_map, input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, options.threads)
 
         elif options.call and (options.refs != None or options.reads != None) and options.graph == None and options.colours == None:
 
             sys.stderr.write("Building a DBG and calling unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, True, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.reads, options.kmer, options.threads, False, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.call_unitigs_build(options.refs, options.kmer, options.threads, False, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, options.threads, False, options.write_graph, options.reads)
 
         elif options.query and options.graph != None and options.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
 
             sys.stderr.write("Querying unitigs within existing DBG...\n")
-            unitig_map, input_colour_pref = map_strings.query_unitigs_existing(options.graph, options.colours, options.unitigs, options.threads)
+            unitig_map, input_colour_pref = unitig_query.query_unitigs_existing(options.graph, options.colours, options.unitigs, options.threads)
 
         elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and options.colours == None:
             sys.stderr.write("Building a DBG and querying unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, True, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, False, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = map_strings.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, False, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, False, options.write_graph, options.reads)
 
         else:
             print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
@@ -172,7 +172,7 @@ def main():
                         unitigs.append(unitig_fields[0])
 
             # call c++ code to map (also writes output file)
-            map_strings.call(fasta_in,
+            unitig_query.call(fasta_in,
                              names_in,
                              unitigs,
                              options.out + ".pyseer",

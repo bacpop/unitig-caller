@@ -104,7 +104,7 @@ setup(
             'unitig-caller = unitig_caller.__main__:main'
             ]
     },
-    ext_modules=[CMakeExtension('map_strings')],
+    ext_modules=[CMakeExtension('unitig_query')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False
 )
