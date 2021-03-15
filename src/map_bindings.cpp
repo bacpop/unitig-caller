@@ -56,7 +56,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::experimental::filesystem::path p(file);
+        std::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
@@ -101,7 +101,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::experimental::filesystem::path p(file);
+        std::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
@@ -155,7 +155,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::experimental::filesystem::path p(file);
+        std::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
@@ -215,7 +215,7 @@ std::pair<std::unordered_map<std::string, std::vector<bool>>,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::experimental::filesystem::path p(file);
+        std::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
