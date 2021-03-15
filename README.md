@@ -3,15 +3,12 @@
 [![Anaconda-Server Badge](https://anaconda.org/bioconda/unitig-caller/badges/version.svg)](https://anaconda.org/bioconda/unitig-caller)
 
 Determines presence/absence of sequence elements in bacterial sequence
-data using Bifrost Build and Query functions. Uses assemblies and/or reads as inputs.
+data. Uses assemblies and/or reads as inputs.
 
-The implementation of unitig-caller is a wrapper around [Bifrost](https://github.com/pmelsted/bifrost)
-which formats files for use with pyseer, as well as an implementation which calls sequences
-using an FM-index.
+The implementation of unitig-caller is a wrapper around the [Bifrost](https://github.com/pmelsted/bifrost) API which formats files for use with pyseer, as well as an implementation which calls sequences using an FM-index.
 
-Build mode creates a compact de Bruijn graph using Bifrost. Query mode converts the .gfa
-file produced by Build mode to a .fasta, using an associated colours file to query
-the presence of unitigs in the source genomes used to build the original de Bruijn graph.
+Call mode builds a Bifrost DBG and calls the colours for each unitig within. Query mode queries
+the colours of existing unitigs within a new population.
 
 Simple mode finds presence of unitigs in a new population using an FM-index.
 
@@ -77,10 +74,11 @@ This uses Bifrost Build to generate a compact coloured de Bruijn graph, and retu
 unitig-caller --call --refs refs.txt --reads reads.txt --out out_prefix
 ```
 
-`--refs` is a required .txt file listing paths of input ASSEMBLIES
-(.fasta or .fastq), each on a new line. No header row.
+`--refs` and `--reads` are .txt file listing paths of input ASSEMBLIES and READS respectively
+(.fasta or .fastq), each on a new line. No header row. Can either specify both or single arguments.
 
-`--reads` is an optional .txt file listing paths to READ files (.fasta or .fastq), each on new line. No header row
+NOTE: ensure reads and references are correctly assigned. Bifrost filters out kmers with coverage < 1 in READS
+files to remove sequencing errors.
 
 `--kmer` can be specified for the kmer size used to built the graph. By default this is 31 bp.
 
@@ -182,6 +180,27 @@ Simple mode options:
 Other:
   --threads THREADS  Number of threads to use [default = 1]
   --version          show program's version number and exit
+```
+
+## Interpreting output files
+
+Pyseer format details unitig sequences followed by the file names of the genomes in which they are found.
+
+If a unitig is not found in any genomes, it will have no associated file names.
+
+```
+TATCCAGGCAGGAAAATATACAGGGAACGTTGTGTTTTCGATTAAGTATGAATGATGTAAA | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#29.contigs_velvet:1
+GGCTATTGAAGCACCAGAGAATATCCAGGCAGGAAAATATACAGGGAACGT | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#27.contigs_velvet:1 12673_8#29.contigs_velvet:1
+CATGGCTATTGAAGCACCAGAGAATATCCAGGC | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#27.contigs_velvet:1 12673_8#28.contigs_velvet:1 12673_8#29.contigs_velvet:1
+```
+
+Rtab format details unitig sequences, along with a presence/absence matrix in each input file (1 present, 0 not).
+
+```
+Unitig_sequence	12673_8#24.contigs_velvet	12673_8#26.contigs_velvet	12673_8#27.contigs_velvet	12673_8#28.contigs_velvet	12673_8#29.contigs_velvet
+GGATGCGGATGCCGACGCTGATGCTGACGCC	0	0	1	0	0
+AGCATCAGCATCAGCGTCGGCATCCGCATCC	0	0	1	0	0
+CGCTGATGCGGATGCCGACGCTGATGCGGAC	1	1	0	0	1
 ```
 
 ## Citation

@@ -159,7 +159,7 @@ std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& q
     const auto unitig_first = unitig_current;
 
     // get the colours for the unitig
-    std::vector<bool> query_colours;
+    std::vector<bool> query_colours(nb_colours, 0);
     std::vector<bool> query_colours_head;
     std::vector<bool> query_colours_tail;
 
