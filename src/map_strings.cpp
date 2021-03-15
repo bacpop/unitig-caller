@@ -70,7 +70,7 @@ void call_strings(const std::vector<std::string>& assembly_list,
    for (auto unitig_it = query_list.begin(); unitig_it != query_list.end(); unitig_it++)
    {
       // debug_stream << *unitig_it << std::endl;
-      dna5_vector query{*unitig_it | view::char_to<dna5>};
+      seqan3::dna5_vector query = *unitig_it | seqan3::views::char_to<seqan3::dna5> | seqan3::views::to<std::vector>;
 
       for (unsigned int thread_idx = 0; thread_idx < num_threads; ++thread_idx)
       {
@@ -120,7 +120,7 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
 
       // Read index if it already exists
       fasta_fm_index ref_index;
-      if (std::experimental::filesystem::exists(idx_file_name))
+      if (std::filesystem::exists(idx_file_name))
       {
          {
             std::ifstream is{idx_file_name, std::ios::binary};
@@ -131,8 +131,8 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
       else
       {
          // Create index
-         sequence_file_input reference_in{*file_it};
-         std::vector<dna5_vector> reference_seq;
+         seqan3::sequence_file_input reference_in{*file_it};
+         std::vector<seqan3::dna5_vector> reference_seq;
          for (auto & [seq, id, qual] : reference_in)
          {
             reference_seq.push_back(std::move(seq));
@@ -152,7 +152,7 @@ std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_f
    return seq_idx;
 }
 
-std::vector<std::string> seq_search(const dna5_vector& query,
+std::vector<std::string> seq_search(const seqan3::dna5_vector& query,
                                     const std::vector<fasta_fm_index>& seq_idx,
                                     const std::vector<std::string>& names,
                                     const size_t start,
@@ -164,17 +164,20 @@ std::vector<std::string> seq_search(const dna5_vector& query,
    {
       // debug_stream << *name_it << std::endl;
 
+      int found = 0;
       auto results = search(query, *ref_it);
+      found = (int)std::ranges::distance(results);
       // debug_stream << "There are " << results.size() << " hits.\n";
       // debug_stream << results << '\n';
-      if (results.empty())
+      if (!found)
       {
-         results = search(query | std::view::reverse | seqan3::view::complement, *ref_it);
+         auto results = search(query | std::views::reverse | seqan3::views::complement, *ref_it);
+         found = (int)std::ranges::distance(results);
          // debug_stream << "There are " << results.size() << " hits.\n";
          // debug_stream << results << '\n';
       }
 
-      if (!results.empty())
+      if (found)
       {
          // debug_stream << "found" << std::endl;
          present.push_back(*name_it);
@@ -183,4 +186,3 @@ std::vector<std::string> seq_search(const dna5_vector& query,
    }
    return present;
 }
-

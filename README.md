@@ -3,15 +3,12 @@
 [![Anaconda-Server Badge](https://anaconda.org/bioconda/unitig-caller/badges/version.svg)](https://anaconda.org/bioconda/unitig-caller)
 
 Determines presence/absence of sequence elements in bacterial sequence
-data using Bifrost Build and Query functions. Uses assemblies and/or reads as inputs.
+data. Uses assemblies and/or reads as inputs.
 
-The implementation of unitig-caller is a wrapper around [Bifrost](https://github.com/pmelsted/bifrost)
-which formats files for use with pyseer, as well as an implementation which calls sequences
-using an FM-index.
+The implementation of unitig-caller is a wrapper around the [Bifrost](https://github.com/pmelsted/bifrost) API which formats files for use with pyseer, as well as an implementation which calls sequences using an FM-index.
 
-Build mode creates a compact de Bruijn graph using Bifrost. Query mode converts the .gfa
-file produced by Build mode to a .fasta, using an associated colours file to query
-the presence of unitigs in the source genomes used to build the original de Bruijn graph.
+Call mode builds a Bifrost DBG and calls the colours for each unitig within. Query mode queries
+the colours of existing unitigs within a new population.
 
 Simple mode finds presence of unitigs in a new population using an FM-index.
 
@@ -55,69 +52,77 @@ python setup.py install
 ## Usage
 
 There are three ways to use this package:
-1. Build a population graph to extract unitigs for GWAS with pyseer like [unitig-counter](https://github.com/johnlees/unitig-counter) (`--build`).
-2. Find these unitigs in a new population using a graph (`--build` and `--query`).
-3. Find these unitigs in a new population using an index (`--simple`).
+1. Build a population graph to extract unitigs for GWAS with pyseer like [unitig-counter](https://github.com/johnlees/unitig-counter) (`--call`).
+2. Find existing unitigs in a new population using a graph (`--query`).
+3. Find existing unitigs in a new population using an index (`--simple`).
 
-For 1), run `--build` mode followed by `--query` mode.
+For 1), run `--call` mode.
 
 Both 2) and 3) give the same results with different index tools, both finding unitigs so pyseer models can be applied to a new population.
 
-For 2), first run `--build` mode to make a graph for the
-new population. Then run `--query` mode with this graph, but the `--unitigs` from *the original population*.
+For 2) Run `--query` mode, specifying *new population* input fastas file names in a text file (one file per line), with `--unitigs` from *the original population*.
 
 For 3), run `--simple` mode giving the new genomes as `--refs` and the `--unitigs` from *the original population*.
 
 These modes are detailed below
 
-### Running Build mode
-This uses Bifrost Build to generate a compact de Bruijn graph. By default this a
-coloured compact de Bruijn graph.
+### Running Call mode
+This uses Bifrost Build to generate a compact coloured de Bruijn graph, and return colours of unitigs within.
+
+#### If no pre-built Bifrost graph exists
 ```
-unitig-caller --build --refs refs.txt --reads reads.txt --output out_prefix
+unitig-caller --call --refs refs.txt --reads reads.txt --out out_prefix
 ```
 
-`--refs` is a required .txt file listing paths of input assemblies or read files
-(.fasta or .fastq), each on a new line. Must be specified as either 'refs.txt' for assemblies
-or 'reads.txt' for read files. No header row.
+`--refs` and `--reads` are .txt file listing paths of input ASSEMBLIES and READS respectively
+(.fasta or .fastq), each on a new line. No header row. Can either specify both or single arguments.
 
-`--reads` is an optional .txt file listing paths to additional sequence files of different type
-to those specified in --input1 (e.g. if 'refs.txt' is given in `--refs`, then 'reads.txt' will
-be given in `--reads` and vice versa), each on new line. No header row.
+NOTE: ensure reads and references are correctly assigned. Bifrost filters out kmers with coverage < 1 in READS
+files to remove sequencing errors.
 
-`--output` is the prefix for output files.
+`--kmer` can be specified for the kmer size used to built the graph. By default this is 31 bp.
 
-By default de Bruijn graphs are coloured, with an accompanying .bfg_colors being
-generated alongside the .gfa file. To turn this off, use `--no_colour`. Note, Query mode
-cannot be run without a .bfg_colors file.
+#### If pre-built Bifrost graph exists
 
-To generate a clean de Bruijn graph (clip tips and delete isolated contigs shorter
-than k k-mers in length), specify `--clean`.
+```
+unitig-caller --call --graph graph.gfa --colours graph.bfg_colors --out out_prefix
+```
 
-Build mode automatically generates a .fasta file containing unitigs found within the graph.
+`--graph` is a pre-built bifrost graph .gfa, and `--colours` is its associated colours file.
+
+#### For both call modes
+
+`--out` is the prefix for output files.
+
+Call mode automatically generates a .pyseer file containing unitigs found within the graph and their graph. Rtab or pyseer
+formats can be specified with `--rtab` and `--pyseer` respectively.
 
 ### Running Query mode
-Before running Query mode, generate a coloured compact de Bruijn graph using Build mode.
-Then run the Query command as below.
+Queries existing unitigs in a Bifrost graph. This is useful when identical unitig definitions need to be used between populations, for example when using pyseer's prediction mode.
+
+#### If no pre-built Bifrost graph exists
 ```
-unitig-caller --query --graph-prefix in_prefix --unitigs query_unitigs.fasta --output out_prefix
+unitig-caller --query --refs refs.txt --reads reads.txt --unitigs query_unitigs.fasta --out out_prefix
 ```
 
-`--graph-prefix` is the required prefix for the .gfa, .bfg_colors and unitigs .fasta files generated from
-`--build` mode applied to the new population.
+`--refs` and `--reads` are the same arguments as in `--call`.
 
-`--unitigs` is an optional .fasta file, specifying a separate unitigs .fasta file that was
-generated by `--build` mode on another graph. If not specified, unitigs from the graph will be used,
-generating calls for this population.
+`--kmer` can be specified for the kmer size used to built the graph. By default this is 31 bp.
 
-`--output` is the prefix for output files.
+#### If pre-built Bifrost graph exists
 
-The sensitivity of querying can be altered by passing a float argument to `--ratiok`
-(between 0 and 1, default 1.0), which determines the threshold proportion of k-mers of a
-specific colour present in a unitig for colour classification. Specifying `--inexact` will
-search the graph for both exact and inexact k-mers (1 substitution or indel) from queries.
-Lowering `--ratiok` and/or specifying `--inexact` will result in more colour hits per unitig,
-but will increase probability of false positives and run-time.
+```
+unitig-caller --query --graph graph.gfa --colours graph.bfg_colors --unitigs query_unitigs.fasta --out out_prefix
+```
+
+#### For both query modes
+
+`--unitigs` is .fasta file or text file with unitig sequences (one sequence per line, with header line).
+
+`--out` is the prefix for output files.
+
+Query mode automatically generates a .pyseer file containing unitigs found within the graph and their graph. Rtab or pyseer
+formats can be specified with `--rtab` and `--pyseer` respectively.
 
 ### Running simple mode
 This uses suffix arrays (FM-index) provided by [SeqAn3](https://www.seqan.de/) to perform
@@ -126,8 +131,7 @@ string matches:
 unitig-caller --simple --refs strain_list.txt --unitigs queries.txt --output calls
 ```
 
-`--refs` is a required file listing input assemblies, name followed by location
-of fasta file (tab separated), each on a new line. No header row.
+`--refs` is a required file listing input assemblies, the same as `refs` in `call`.
 
 `--unitigs` is a required list of the unitig sequences to call. The unitigs need
 to be in the first column (tab separated). A header row is assumed, so
@@ -140,61 +144,63 @@ be quickly loaded by subsequent runs. To turn this off use `--no-save-idx`.
 
 ### Option reference
 ```
-usage: unitig-caller [-h] (--build | --query | --simple) [--refs REFS]
-                     [--reads READS] [--graph-prefix GRAPH_PREFIX]
-                     [--unitigs UNITIGS] [--output OUTPUT] [--no_colour]
-                     [--clean] [--ratiok RATIOK] [--inexact]
-                     [--kmer_size KMER_SIZE] [--minimizer_size MINIMIZER_SIZE]
-                     [--no-save-idx] [--threads THREADS] [--bifrost BIFROST]
-                     [--version]
+usage: unitig-caller [-h] (--call | --query | --simple) [--refs REFS]
+                     [--reads READS] [--graph GRAPH] [--colours COLOURS]
+                     [--unitigs UNITIGS] [--pyseer] [--rtab] [--out OUT]
+                     [--kmer KMER] [--write-graph]
+                     [--no-save-idx] [--threads THREADS] [--version]
 
 Call unitigs in a population dataset
 
 optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help         show this help message and exit
 
 Mode of operation:
-  --build               Build coloured/uncoloured de Bruijn graph using
-                        Bifrost
-  --query               Query unitig presence/absence across input genomes
-  --simple              Use FM-index to make calls
+  --call             Build a DBG and call colours of unitigs within
+  --query            Query unitig colours in reference genomes/DBG
+  --simple           Use FM-index to make calls
 
 Unitig-caller input/output:
-  --refs REFS           Ref file to use to --build bifrost graph (or with
-                        --simple)
-  --reads READS         Read file to use to --build bifrost graph
-  --graph-prefix GRAPH_PREFIX
-                        Prefix of bifrost graph to --query
-  --unitigs UNITIGS     fasta file of unitigs to query (--query or --simple)
-  --output OUTPUT       Prefix for output [default = 'unitig_caller']
-
-Build Input/output:
-  --no_colour           Specify for uncoloured de Bruijn Graph [default =
-                        False]
-  --clean               Clean DBG (clip tips and delete isolated contigs
-                        shorter than k k-mers in length) [default = False]
-
-Query Input/output:
-  --ratiok RATIOK       ratio of k-mers from queries that must occur in the
-                        graph to be considered as belonging to colour [default
-                        = 1.0]
-  --inexact             Graph is searched with exact and inexact k-mers (1
-                        substitution or indel) from queries [default = False]
+  --refs REFS        Ref file to used to build DBG or use with --simple
+  --reads READS      Read file to used to build DBG
+  --graph GRAPH      Existing graph in GFA format
+  --colours COLOURS  Existing bifrost colours file in .bfg_colors format
+  --unitigs UNITIGS  Text or fasta file of unitigs to query (--query or --simple)
+  --pyseer           Output pyseer format
+  --rtab             Output rtab format
+  --out OUT          Prefix for output [default = 'unitig_caller']
 
 Bifrost options:
-  --kmer_size KMER_SIZE
-                        K-mer size for graph building/querying [default = 31]
-  --minimizer_size MINIMIZER_SIZE
-                        Minimizer size to be used for k-mer hashing [default =
-                        23]
+  --kmer KMER        K-mer size for graph building/querying [default = 31]
+  --write-graph      Output DBG built with unitig-caller
 
 Simple mode options:
-  --no-save-idx         Do not save FM-indexes for reuse
+  --no-save-idx      Do not save FM-indexes for reuse
 
 Other:
-  --threads THREADS     Number of threads to use [default = 1]
-  --bifrost BIFROST     Location of bifrost executable [default = Bifrost]
-  --version             show program's version number and exit
+  --threads THREADS  Number of threads to use [default = 1]
+  --version          show program's version number and exit
+```
+
+## Interpreting output files
+
+Pyseer format details unitig sequences followed by the file names of the genomes in which they are found.
+
+If a unitig is not found in any genomes, it will have no associated file names.
+
+```
+TATCCAGGCAGGAAAATATACAGGGAACGTTGTGTTTTCGATTAAGTATGAATGATGTAAA | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#29.contigs_velvet:1
+GGCTATTGAAGCACCAGAGAATATCCAGGCAGGAAAATATACAGGGAACGT | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#27.contigs_velvet:1 12673_8#29.contigs_velvet:1
+CATGGCTATTGAAGCACCAGAGAATATCCAGGC | 12673_8#24.contigs_velvet:1 12673_8#26.contigs_velvet:1 12673_8#27.contigs_velvet:1 12673_8#28.contigs_velvet:1 12673_8#29.contigs_velvet:1
+```
+
+Rtab format details unitig sequences, along with a presence/absence matrix in each input file (1 present, 0 not).
+
+```
+Unitig_sequence	12673_8#24.contigs_velvet	12673_8#26.contigs_velvet	12673_8#27.contigs_velvet	12673_8#28.contigs_velvet	12673_8#29.contigs_velvet
+GGATGCGGATGCCGACGCTGATGCTGACGCC	0	0	1	0	0
+AGCATCAGCATCAGCGTCGGCATCCGCATCC	0	0	1	0	0
+CGCTGATGCGGATGCCGACGCTGATGCGGAC	1	1	0	0	1
 ```
 
 ## Citation

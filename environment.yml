@@ -12,3 +12,5 @@ dependencies:
   - zlib
   - bzip2
   - bifrost
+  - seqan3
+  - pthread-stubs
