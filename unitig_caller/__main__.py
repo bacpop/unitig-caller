@@ -27,7 +27,7 @@ def get_options():
     mode.add_argument('--call',
                         action='store_true',
                         default=False,
-                        help='Build a DBG and call colours of untigs within ')
+                        help='Build a DBG and call colours of unitigs within ')
     mode.add_argument('--query',
                         action='store_true',
                         default=False,
