@@ -105,7 +105,7 @@ Queries existing unitigs in a Bifrost graph. This is useful when identical uniti
 unitig-caller --query --refs refs.txt --reads reads.txt --unitigs query_unitigs.fasta --out out_prefix
 ```
 
-`refs` and `reads` are the same arguments as in `call`.
+`--refs` and `--reads` are the same arguments as in `--call`.
 
 `--kmer` can be specified for the kmer size used to built the graph. By default this is 31 bp.
 
