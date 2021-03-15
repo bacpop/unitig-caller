@@ -183,4 +183,6 @@ PYBIND11_MODULE(unitig_query, m)
           py::arg("is_ref") = 1,
           py::arg("write_graph") = 0,
           py::arg("infile2") = "NA");
+
+    m.attr("version") = VERSION_INFO;
 }
