@@ -103,31 +103,31 @@ def main():
             # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
             sys.stderr.write("Calling unitigs within input genomes...\n")
-            unitig_map, input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, options.threads)
+            unitig_map, input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, True, "NA", options.threads)
 
         elif options.call and (options.refs != None or options.reads != None) and options.graph == None and options.colours == None:
 
             sys.stderr.write("Building a DBG and calling unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, options.threads, True, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, options.threads, False, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, True, "NA", options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, options.threads, False, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, False, options.write_graph, options.reads)
 
         elif options.query and options.graph != None and options.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
 
             sys.stderr.write("Querying unitigs within existing DBG...\n")
-            unitig_map, input_colour_pref = unitig_query.query_unitigs_existing(options.graph, options.colours, options.unitigs, options.threads)
+            unitig_map, input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, False, options.unitigs, options.threads)
 
         elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and options.colours == None:
             sys.stderr.write("Building a DBG and querying unitigs within...\n")
             if options.refs != None and options.reads == None:
-                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, True, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, True, options.write_graph)
             elif options.refs == None and options.reads != None:
-                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.reads, options.kmer, options.unitigs, options.threads, False, options.write_graph)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, False, options.unitigs, options.threads, False, options.write_graph)
             elif options.refs != None and options.reads != None:
-                unitig_map, input_colour_pref = unitig_query.query_unitigs_build(options.refs, options.kmer, options.unitigs, options.threads, False, options.write_graph, options.reads)
+                unitig_map, input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, False, options.write_graph, options.reads)
 
         else:
             print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
@@ -152,7 +152,7 @@ def main():
         # Read input into lists, as in 'index' and 'call'
 
         if options.refs == None or options.unitigs == None:
-            sys.stderr.write("Error: Please specify a strains-list file as --refs and unitigs file as --unitigs\n")
+            sys.stderr.write("Error: Please specify a list of assemblies as --refs and unitigs file as --unitigs\n")
             sys.exit(1)
         else:
             names_in = []

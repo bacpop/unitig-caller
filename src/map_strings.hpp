@@ -115,26 +115,17 @@ int py_call_strings(std::vector<std::string> assembly_list,
                     bool write_idx = 1,
                     size_t num_threads = 1);
 
-ReturnPair py_uc_call_exists (const std::string& graphfile,
-                                                     const std::string& coloursfile,
-                                                     size_t num_threads);
+ReturnPair py_uc_exists (const std::string& graphfile,
+                              const std::string& coloursfile,
+                              const bool call,
+                              const std::string& query_file,
+                              size_t num_threads);
 
-ReturnPair py_uc_call_build (const std::string& infile1,
-                                                    const int& kmer,
-                                                    size_t num_threads,
-                                                    bool is_ref,
-                                                    const bool write_graph,
-                                                    const std::string& infile2);
-
-ReturnPair py_uc_query_exists (const std::string& graphfile,
-                                                      const std::string& coloursfile,
-                                                      const std::string& query_file,
-                                                      size_t num_threads);
-
-ReturnPair py_uc_query_build (const std::string& infile1,
-                                                     const int& kmer,
-                                                     const std::string& query_file,
-                                                     size_t num_threads,
-                                                     bool is_ref,
-                                                     const bool write_graph,
-                                                     const std::string& infile2);
+ReturnPair py_uc_build (const std::string& infile1,
+                        const int& kmer,
+                        const bool call,
+                        const std::string& query_file,
+                        size_t num_threads,
+                        bool is_ref,
+                        const bool write_graph,
+                        const std::string& infile2);
