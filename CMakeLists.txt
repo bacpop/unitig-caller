@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4)
 project(unitig_query)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
 
 # find pthreads
 set(THREADS_PREFER_PTHREAD_FLAG ON)
