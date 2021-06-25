@@ -32,20 +32,11 @@ conda config --add channels bioconda
 conda config --add channels conda-forge
 ```
 
-### With pip
-Get it from PyPI:
-```
-pip install unitig-caller
-```
-
-Requires [bifrost](https://github.com/pmelsted/bifrost) version 1.0.3 installed, and accessible
-via PATH (see steps for installation at Bifrost github page).
-
 ### From source
 Requires `cmake`, `pthreads`, `pybind11` and a C++17 compiler (e.g. gcc >=7.3), in addition
-to the pip requirements.
+to the conda requirements (see `environment.yml`).
 ```
-git clone https://github.com/johnlees/unitig-caller --recursive
+git clone https://github.com/johnlees/unitig-caller
 python setup.py install
 ```
 
