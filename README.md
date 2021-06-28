@@ -57,6 +57,17 @@ For 3), run `--simple` mode giving the new genomes as `--refs` and the `--unitig
 
 These modes are detailed below
 
+### Generating an input file
+
+To generate an input file for `--refs` or `--reads`, it is best to use `ls` to produce absolute file paths to assembly or read files.
+
+For example:
+```
+ls -d -1 $PWD/*.fa > input.txt
+```
+
+This will generate a file `input.txt` containing the absolute file paths for all `.fa` files present in the current directory.
+
 ### Running Call mode
 This uses Bifrost Build to generate a compact coloured de Bruijn graph, and return colours of unitigs within.
 
