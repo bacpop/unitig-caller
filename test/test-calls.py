@@ -20,17 +20,26 @@ if (options.method == "rtab"):
         if (len(expected_samples) != len(test_samples)):
             sys.stderr.write("Length of rtab header mismatches\n")
             raise RuntimeError("Length of rtab header mismatches")
-        elif len(set(expected_samples).intersection(test_samples)) != len(expected_samples):
+        elif set(expected_samples) != set(test_samples):
             sys.stderr.write("Different samples contained\n")
             raise RuntimeError("Different samples contained")
 
+        expected_dict = {}
+        test_dict = {}
         for expected_line, test_line in zip(expected_rtab, test_rtab):
-            expected_calls = expected_line.rstrip().split("\t")[1:]  
-            test_calls = test_line.rstrip().split("\t")[1:]
-            for sample_idx, call in enumerate(expected_calls):
-                if call != test_calls[test_samples.index(expected_samples[sample_idx])]:
-                    sys.stderr.write("Calls mismatch for " + expected_samples[sample_idx] + "\n")
-                    raise RuntimeError("Calls mismatch for " + expected_samples[sample_idx])
+            expected_calls = expected_line.rstrip().split("\t")
+            test_calls = test_line.rstrip().split("\t")
+            expected_dict[expected_calls[0]] = expected_calls[1:]
+            test_dict[test_calls[0]] = test_calls[1:]
+        for unitig, calls in expected_dict.items():
+            if unitig in test_dict:
+                test_calls = expected_dict[unitig]
+                for sample_idx, call in enumerate(calls):
+                    if call != test_calls[test_samples.index(expected_samples[sample_idx])]:
+                        sys.stderr.write("Calls mismatch for " + expected_samples[sample_idx] + "\n")
+                        raise RuntimeError("Calls mismatch for " + expected_samples[sample_idx])
+            else:
+                raise RuntimeError(f"No call for {unitig}\n")
 
 elif (options.method == "pyseer"):
     d = {}
