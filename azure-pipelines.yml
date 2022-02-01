@@ -34,7 +34,7 @@ steps:
 # to add C++ tests add the following line, and remove --no-cpp
 # pushd src && make && make install && popd
 - script: |
-    source activate pp_env
+    source activate unitig_caller_env
     python -m pip install --no-deps --ignore-installed .
     cd test && python run_test.py
   displayName: 'Install and run_test.py'
