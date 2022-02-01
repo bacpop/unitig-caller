@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('--method', help="File type", required=True)
 parser.add_argument('--test', help="Calls produced", required=True)
 parser.add_argument('--expected', help="Calls expected", required=True)
-parser.add_argument('--strict', help="Ensure unitigs exactly match")
+parser.add_argument('--strict', action="store_true", default=False, help="Ensure unitigs exactly match")
 
 options = parser.parse_args()
 
