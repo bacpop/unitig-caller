@@ -11,6 +11,6 @@ dependencies:
   - pybind11
   - zlib
   - bzip2
-  - bifrost
-  - seqan3
+  - bifrost >=1.0.6
+  - seqan3 >=3.1.0
   - pthread-stubs

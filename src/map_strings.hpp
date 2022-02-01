@@ -32,7 +32,7 @@
 #include <cereal/archives/binary.hpp>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/io/sequence_file/all.hpp>
-#include <seqan3/range/views/all.hpp>
+#include <seqan3/search/views/all.hpp>
 #include <seqan3/search/search.hpp>
 //#include <seqan3/std/filesystem>
 #include <seqan3/std/ranges>
