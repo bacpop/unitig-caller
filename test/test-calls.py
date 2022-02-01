@@ -32,6 +32,8 @@ if (options.method == "rtab"):
             test_calls = test_line.rstrip().split("\t")
             expected_dict[expected_calls[0]] = expected_calls[1:]
             test_dict[test_calls[0]] = test_calls[1:]
+        if (len(expected_dict) != len(test_dict)):
+            raise RuntimeError(f"Number of unitigs differs expected {len(expected_dict)} found {len(test_dict)}")
         for unitig, calls in expected_dict.items():
             if unitig in test_dict:
                 test_calls = expected_dict[unitig]
@@ -53,20 +55,26 @@ elif (options.method == "pyseer"):
             for sample in call_fields[2:]:
                 d[call_fields[0]].add(sample)
 
+    num_calls = 0
     with open(options.test, 'r') as test_pyseer:
         for call in test_pyseer:
+            num_calls += 1
             call_fields = call.rstrip().split(" ")
             if not call_fields[0] in d.keys():
                 sys.stderr.write("No call for " + call_fields[0] + "\n")
                 if options.strict:
                     raise RuntimeError("Unitigs mismatch")
-            test_calls = set()
-            for sample in call_fields[2:]:
-                test_calls.add(sample)
+            else:
+                test_calls = set()
+                for sample in call_fields[2:]:
+                    test_calls.add(sample)
 
-            if test_calls != d[call_fields[0]]:
-                sys.stderr.write("Calls mismatch for " + call_fields[0] + "\n")
-                raise RuntimeError("Calls mismatch for " + call_fields[0])
+                if test_calls != d[call_fields[0]]:
+                    sys.stderr.write("Calls mismatch for " + call_fields[0] + "\n")
+                    raise RuntimeError("Calls mismatch for " + call_fields[0])
+
+    if (len(d) != num_calls):
+        raise RuntimeError(f"Number of unitigs differs expected {len(d)} found {num_calls}")
 
 else:
     raise RuntimeError("Unknown method type")
