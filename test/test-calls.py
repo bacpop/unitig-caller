@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description=description,
 parser.add_argument('--method', help="File type", required=True)
 parser.add_argument('--test', help="Calls produced", required=True)
 parser.add_argument('--expected', help="Calls expected", required=True)
+parser.add_argument('--strict', help="Ensure unitigs exactly match")
 
 options = parser.parse_args()
 
@@ -39,7 +40,9 @@ if (options.method == "rtab"):
                         sys.stderr.write("Calls mismatch for " + expected_samples[sample_idx] + "\n")
                         raise RuntimeError("Calls mismatch for " + expected_samples[sample_idx])
             else:
-                raise RuntimeError(f"No call for {unitig}\n")
+                sys.stderr.write(f"No call for {unitig}\n")
+                if options.strict:
+                    raise RuntimeError("Unitigs mismatch")
 
 elif (options.method == "pyseer"):
     d = {}
@@ -55,7 +58,8 @@ elif (options.method == "pyseer"):
             call_fields = call.rstrip().split(" ")
             if not call_fields[0] in d.keys():
                 sys.stderr.write("No call for " + call_fields[0] + "\n")
-                raise RuntimeError("No call for " + call_fields[0])
+                if options.strict:
+                    raise RuntimeError("Unitigs mismatch")
             test_calls = set()
             for sample in call_fields[2:]:
                 test_calls.add(sample)
