@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.9) # CMP0069 NEW
 set(TARGET_NAME unitig_query)
 project("${TARGET_NAME}")
 
@@ -21,20 +21,27 @@ FIND_LIBRARY(z_LIBRARY NAMES z HINTS ${CONDA_DIR}/lib REQUIRED)
 FIND_LIBRARY(bifrost_LIBRARY NAMES bifrost HINTS ${CONDA_DIR}/lib REQUIRED)
 
 # Set package found as true
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(z DEFAULT_MSG z_INCLUDE_DIR z_LIBRARY)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(bifrost DEFAULT_MSG bifrost_INCLUDE_DIR bifrost_LIBRARY)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(z DEFAULT_MSG z_INCLUDE_DIR z_LIBRARY)
+find_package_handle_standard_args(bifrost DEFAULT_MSG bifrost_INCLUDE_DIR bifrost_LIBRARY)
 
 # Set dirs if multiple include/libraries found
 SET( z_INCLUDE_DIRS ${z_INCLUDE_DIR} )
 SET( z_LIBRARIES ${z_LIBRARY} )
-SET( bifrost_INCLUDE_DIRS ${z_INCLUDE_DIR} )
+SET( bifrost_INCLUDE_DIRS ${bifrost_INCLUDE_DIR} )
 SET( bifrost_LIBRARIES ${bifrost_LIBRARY} )
 
+include_directories(${bifrost_INCLUDE_DIR})
+include_directories(${z_INCLUDE_DIR})
+
+add_library("${TARGET_NAME}" MODULE)
 execute_process(COMMAND pybind11-config --cmakedir OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE pybind11_DIR)
 find_package(pybind11 2.6 CONFIG REQUIRED)
-target_sources("${TARGET_NAME}" src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
+target_sources("${TARGET_NAME}" PRIVATE src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
 
-if(UNIX AND (NOT APPLE OR NOT CMAKE_COMPILER_IS_GNUCC))
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result)
+if(result)
     set_target_properties("${TARGET_NAME}" PROPERTIES
                           INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
