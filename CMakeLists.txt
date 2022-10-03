@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9) # CMP0069 NEW
 set(TARGET_NAME unitig_query)
 project("${TARGET_NAME}")
+add_compile_definitions(PYTHON_EXT)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
@@ -37,7 +38,14 @@ include_directories(${z_INCLUDE_DIR})
 add_library("${TARGET_NAME}" MODULE)
 execute_process(COMMAND pybind11-config --cmakedir OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE pybind11_DIR)
 find_package(pybind11 2.6 CONFIG REQUIRED)
+
 target_sources("${TARGET_NAME}" PRIVATE src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
+
+set_target_properties("${TARGET_NAME}" PROPERTIES
+    CXX_VISIBILITY_PRESET "hidden"
+    PREFIX "${PYTHON_MODULE_PREFIX}"
+    SUFFIX "${PYTHON_MODULE_EXTENSION}"
+)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT result)
