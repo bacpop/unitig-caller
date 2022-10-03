@@ -5,12 +5,17 @@ add_compile_definitions(PYTHON_EXT)
 
 set(CMAKE_CXX_STANDARD 17)
 if(ENV{UC_INSTALL} EQUAL "conda")
+else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFS_EXP -fconcepts")
 endif()
 
 IF(CMAKE_COMPILER_IS_GNUCC OR "$ENV{SKETCHLIB_INSTALL}" STREQUAL "conda")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 ENDIF()
+
+# gcc debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
 # Vendored libraries
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/vendor)
@@ -64,4 +69,8 @@ else()
     if(OpenMP_CXX_FOUND)
         target_link_libraries("${TARGET_NAME}" PRIVATE OpenMP::OpenMP_CXX)
     endif()
+endif()
+if(ENV{UC_INSTALL} EQUAL "conda")
+else()
+    target_link_libraries("${TARGET_NAME}" PRIVATE stdc++fs)
 endif()
