@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 3.4)
-project(unitig_query)
+set(TARGET_NAME poppunk_refine)
+project("${TARGET_NAME}")
+
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-# find pthreads
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-# check for conda environment
-IF( DEFINED ENV{CONDA_PREFIX} )
-  # set conda directory
-  SET(CONDA_DIR "$ENV{CONDA_PREFIX}")
-  # find Seqan3 packages
-  find_path(SEQAN3_CLONE_DIR name bin PATHS ${CONDA_DIR} NO_DEFAULT_PATH)
-  find_path(SEQAN3_INCLUDE_DIR name seqan PATHS ${SEQAN3_CLONE_DIR}/include NO_DEFAULT_PATH)
-  find_path(SEQAN3_SUBMODULES_DIR name submodules PATHS ${SEQAN3_INCLUDE_DIR}/seqan3 NO_DEFAULT_PATH)
+IF(CMAKE_COMPILER_IS_GNUCC OR "$ENV{SKETCHLIB_INSTALL}" STREQUAL "conda")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 ENDIF()
 
+if(UNIX AND (NOT APPLE OR NOT CMAKE_COMPILER_IS_GNUCC))
+    set_target_properties("${TARGET_NAME}" PROPERTIES
+                          INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
+
+# Vendored libraries
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/vendor)
 
 #Find include dirs for z and bifrost
 FIND_PATH(z_INCLUDE_DIR NAMES zlib.h HINTS ${CONDA_DIR}/include)
@@ -36,10 +35,16 @@ SET( z_LIBRARIES ${z_LIBRARY} )
 SET( bifrost_INCLUDE_DIRS ${z_INCLUDE_DIR} )
 SET( bifrost_LIBRARIES ${bifrost_LIBRARY} )
 
-# find SeqAn3 packages
-find_package(SeqAn3 REQUIRED HINTS ${CONDA_DIR}/share/cmake/seqan3)
+execute_process(COMMAND pybind11-config --cmakedir OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE pybind11_DIR)
+find_package(pybind11 2.6 CONFIG REQUIRED)
+target_sources("${TARGET_NAME}" src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
 
-find_package(pybind11 REQUIRED)
-pybind11_add_module(unitig_query src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
-
-target_link_libraries(unitig_query PRIVATE seqan3::seqan3 ${bifrost_LIBRARIES} ${z_LIBRARIES} Threads::Threads)
+target_link_libraries("${TARGET_NAME}" PRIVATE pybind11::module ${bifrost_LIBRARIES} ${z_LIBRARIES})
+if(DEFINED ENV{CONDA_PREFIX} AND (NOT APPLE OR CMAKE_COMPILER_IS_GNUCC OR ENV{UC_INSTALL} EQUAL "conda"))
+    target_link_libraries("${TARGET_NAME}" PRIVATE gomp)
+else()
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries("${TARGET_NAME}" PRIVATE OpenMP::OpenMP_CXX)
+    endif()
+endif()

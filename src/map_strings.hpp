@@ -26,35 +26,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-// seqan3 headers
-#include <seqan3/core/debug_stream.hpp>
-#include <seqan3/search/fm_index/all.hpp>
-#include <cereal/archives/binary.hpp>
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-#include <seqan3/io/sequence_file/all.hpp>
-#include <seqan3/search/views/all.hpp>
-#include <seqan3/search/search.hpp>
-//#include <seqan3/std/filesystem>
-#include <seqan3/std/ranges>
-
 // Bifrost headers
 #include <bifrost/ColoredCDBG.hpp>
 
 namespace py = pybind11;
-//using namespace seqan3;
-
-// fmindex typedef
-using cust_sdsl_wt_index_type = sdsl::csa_wt<sdsl::wt_blcd<sdsl::bit_vector,
-        sdsl::rank_support_v<>,
-        sdsl::select_support_scan<>,
-        sdsl::select_support_scan<0>>,
-        16,
-        10000000,
-        sdsl::sa_order_sa_sampling<>,
-        sdsl::isa_sampling<>,
-        sdsl::plain_byte_alphabet>;
-typedef seqan3::fm_index<seqan3::dna5, seqan3::text_layout::collection, cust_sdsl_wt_index_type> fasta_fm_index;
-using seqan3::operator""_dna5;
 
 // return pair typedef
 typedef std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vector<std::string>> ReturnPair;
@@ -67,15 +42,6 @@ void call_strings(const std::vector<std::string>& assembly_list,
                   const std::string& output_file,
                   const bool write_idx = 1,
                   const size_t num_threads = 1);
-std::vector<fasta_fm_index> index_fastas(const std::vector<std::string>& fasta_files,
-                                        const size_t start,
-                                        const size_t end,
-                                        const bool write_idx = 1);
-std::vector<std::string> seq_search(const seqan3::dna5_vector& query,
-                                    const std::vector<fasta_fm_index>& seq_idx,
-                                    const std::vector<std::string>& names,
-                                    const size_t start,
-                                    const size_t end);
 
 // bifrost.cpp
 // build graph from refs/reads
