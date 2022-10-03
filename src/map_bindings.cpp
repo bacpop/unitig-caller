@@ -57,7 +57,7 @@ ReturnPair py_uc_exists (const std::string& graphfile,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::filesystem::path p(file);
+        std::experimental::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
@@ -122,7 +122,7 @@ ReturnPair py_uc_build (const std::string& infile1,
     // generate file prefixes for colours
     for (const auto& file : input_colour_files)
     {
-        std::filesystem::path p(file);
+        std::experimental::filesystem::path p(file);
         input_colour_pref.push_back(p.stem());
     }
 
