@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-set(TARGET_NAME poppunk_refine)
+set(TARGET_NAME unitig_query)
 project("${TARGET_NAME}")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -8,11 +8,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 IF(CMAKE_COMPILER_IS_GNUCC OR "$ENV{SKETCHLIB_INSTALL}" STREQUAL "conda")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 ENDIF()
-
-if(UNIX AND (NOT APPLE OR NOT CMAKE_COMPILER_IS_GNUCC))
-    set_target_properties("${TARGET_NAME}" PROPERTIES
-                          INTERPROCEDURAL_OPTIMIZATION ON)
-endif()
 
 # Vendored libraries
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/vendor)
@@ -38,6 +33,11 @@ SET( bifrost_LIBRARIES ${bifrost_LIBRARY} )
 execute_process(COMMAND pybind11-config --cmakedir OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE pybind11_DIR)
 find_package(pybind11 2.6 CONFIG REQUIRED)
 target_sources("${TARGET_NAME}" src/map_strings.cpp src/map_bindings.cpp src/bifrost.cpp)
+
+if(UNIX AND (NOT APPLE OR NOT CMAKE_COMPILER_IS_GNUCC))
+    set_target_properties("${TARGET_NAME}" PROPERTIES
+                          INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
 
 target_link_libraries("${TARGET_NAME}" PRIVATE pybind11::module ${bifrost_LIBRARIES} ${z_LIBRARIES})
 if(DEFINED ENV{CONDA_PREFIX} AND (NOT APPLE OR CMAKE_COMPILER_IS_GNUCC OR ENV{UC_INSTALL} EQUAL "conda"))
