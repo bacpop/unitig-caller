@@ -5,82 +5,13 @@
  *
  */
 
+// kseq headers are already included by bifrost
 #include "map_strings.hpp"
-
-// kseq headers
-#include <kseq/kseq.h>
-KSEQ_INIT(gzFile, gzread)
 
 // sdsl headers
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/suffix_arrays.hpp>
 typedef sdsl::csa_wt<> fm_index_coll;
-
-// Revcomp from bifrost
-// https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02135-8
-#ifdef _MSC_VER
-#define INLINE __forceinline
-#elif defined(__clang__) || defined(__GNUC__)
-#define INLINE inline __attribute__((__always_inline__))
-#else
-#define INLINE inline
-#endif
-
-INLINE string reverse_complement(const string &s) {
-  string seq(s);
-  reverse(seq.begin(), seq.end());
-
-  for (size_t i = 0; i < seq.length(); ++i) {
-    const char c = seq[i] & 0xDF;
-    if (isDNA(c)) {
-      const size_t x = (c & 4) >> 1;
-      seq[i] = alpha[3 - (x + ((x ^ (c & 2)) >> 1))];
-    } else {
-      switch (c) {
-      case 'N':
-        seq[i] = 'N';
-        break;
-      case 'R':
-        seq[i] = 'Y';
-        break;
-      case 'Y':
-        seq[i] = 'R';
-        break;
-      case 'S':
-        seq[i] = 'S';
-        break;
-      case 'W':
-        seq[i] = 'W';
-        break;
-      case 'K':
-        seq[i] = 'M';
-        break;
-      case 'M':
-        seq[i] = 'K';
-        break;
-      case 'B':
-        seq[i] = 'V';
-        break;
-      case 'D':
-        seq[i] = 'H';
-        break;
-      case 'H':
-        seq[i] = 'D';
-        break;
-      case 'V':
-        seq[i] = 'B';
-        break;
-      case '.':
-        seq[i] = '.';
-        break;
-      default:
-        seq[i] = c;
-      }
-    }
-  }
-
-  return seq;
-}
 
 fm_index_coll index_fasta(const std::string &fasta_file,
                           const bool &write_idx) {
@@ -122,6 +53,7 @@ bool seq_search(const std::string &query, const fm_index_coll &ref_idx) {
   size_t query_count = sdsl::count(ref_idx, query.begin(), query.end());
   // if not found, check reverse strand
   if (query_count == 0) {
+    // Revcomp from bifrost
     const std::string rev_query = reverse_complement(query);
     query_count = sdsl::count(ref_idx, rev_query.begin(), rev_query.end());
   }
@@ -140,7 +72,7 @@ void call_strings(const std::vector<std::string> &assembly_list,
   std::cerr << "Constructing indexes for all input sequences..." << std::endl;
   std::vector<fm_index_coll> seq_idx(assembly_list.size());
   #pragma omp parallel for schedule(static) num_threads(num_threads)
-  for (const int file_idx = 0; file_idx < seq_idx.size(); ++idx) {
+  for (int file_idx = 0; file_idx < seq_idx.size(); ++file_idx) {
     seq_idx[file_idx] = index_fasta(assembly_list[file_idx], write_idx);
   }
 
@@ -153,7 +85,7 @@ void call_strings(const std::vector<std::string> &assembly_list,
   for (int unitig_idx = 0; unitig_idx < query_list.size(); ++unitig_idx) {
     std::vector<std::string> present;
     for (int fm_idx = 0; fm_idx < seq_idx.size(); ++fm_idx) {
-      if seq_search(query_list[unitig_idx], seq_idx[fm_idx]) {
+      if (seq_search(query_list[unitig_idx], seq_idx[fm_idx])) {
         present.push_back(assembly_names[fm_idx]);
       }
     }
@@ -161,7 +93,7 @@ void call_strings(const std::vector<std::string> &assembly_list,
     if (present.size() > 0) {
       #pragma omp critical
       {
-        pres_ofs << *unitig_it << " |";
+        pres_ofs << *query_list[unitig_idx] << " |";
         for (auto pres_it = present.begin(); pres_it < present.end(); ++pres_it) {
           pres_ofs << " " << *pres_it << ":1";
         }
