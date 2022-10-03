@@ -11,4 +11,4 @@ dependencies:
   - zlib
   - bzip2
   - bifrost >=1.0.6
-  - gomp
+  - libgomp
