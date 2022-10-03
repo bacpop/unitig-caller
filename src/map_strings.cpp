@@ -93,7 +93,7 @@ void call_strings(const std::vector<std::string> &assembly_list,
     if (present.size() > 0) {
       #pragma omp critical
       {
-        pres_ofs << *query_list[unitig_idx] << " |";
+        pres_ofs << query_list[unitig_idx] << " |";
         for (auto pres_it = present.begin(); pres_it < present.end(); ++pres_it) {
           pres_ofs << " " << *pres_it << ":1";
         }
