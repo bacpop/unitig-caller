@@ -38,6 +38,7 @@ steps:
 # pushd src && make && make install && popd
 - script: |
     source activate unitig_caller_env
+    export UC_INSTALL=conda
     python -m pip install --no-deps --ignore-installed .
     cd test && python run_test.py
   displayName: 'Install and run_test.py'

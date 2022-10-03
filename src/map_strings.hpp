@@ -20,7 +20,12 @@
 #include <thread>
 #include <list>
 #include <assert.h>
+
+#ifdef FS_EXP
 #include <experimental/filesystem>
+#else
+#include <filesystem>
+#endif
 
 // pybind11 headers
 #include <pybind11/pybind11.h>

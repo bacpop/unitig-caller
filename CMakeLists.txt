@@ -4,7 +4,9 @@ project("${TARGET_NAME}")
 add_compile_definitions(PYTHON_EXT)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
+if(ENV{UC_INSTALL} EQUAL "conda")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFS_EXP -fconcepts")
+endif()
 
 IF(CMAKE_COMPILER_IS_GNUCC OR "$ENV{SKETCHLIB_INSTALL}" STREQUAL "conda")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
