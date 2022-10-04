@@ -4,8 +4,8 @@ project("${TARGET_NAME}")
 add_compile_definitions(PYTHON_EXT)
 
 set(CMAKE_CXX_STANDARD 17)
-if(ENV{UC_INSTALL} EQUAL "conda")
-else()
+# older compilers use experimental::filesystem
+if(NOT $ENV{UC_INSTALL} STREQUAL "conda" AND CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFS_EXP -fconcepts")
 endif()
 
@@ -70,7 +70,7 @@ else()
         target_link_libraries("${TARGET_NAME}" PRIVATE OpenMP::OpenMP_CXX)
     endif()
 endif()
-if(ENV{UC_INSTALL} EQUAL "conda")
-else()
+# older compilers use experimental::filesystem
+if(NOT $ENV{UC_INSTALL} STREQUAL "conda" AND CMAKE_COMPILER_IS_GNUCC)
     target_link_libraries("${TARGET_NAME}" PRIVATE stdc++fs)
 endif()
