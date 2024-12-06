@@ -84,7 +84,7 @@ bool seq_search(std::string &query, const fm_index_coll &ref_idx) {
 
 void call_strings(const std::vector<std::string> &assembly_list,
                   const std::vector<std::string> &assembly_names,
-                  const std::vector<std::string> &query_list,
+                  std::vector<std::string> &query_list,
                   const std::string &output_file, const bool write_idx,
                   const size_t num_threads) {
   // Read all sequences into memory as Fasta objects (threaded)
