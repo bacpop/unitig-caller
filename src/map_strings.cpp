@@ -13,6 +13,14 @@
 #include <sdsl/suffix_arrays.hpp>
 typedef sdsl::csa_wt<> fm_index_coll;
 
+// code from
+// https://stackoverflow.com/questions/735204/convert-a-string-in-c-to-upper-case
+char ascii_toupper_char(char c) {
+  return ('a' <= c && c <= 'z')
+             ? c ^ 0x20
+             : c;
+}
+
 fm_index_coll index_fasta(const std::string &fasta_file,
                           const bool &write_idx) {
   fm_index_coll ref_index;
@@ -38,6 +46,12 @@ fm_index_coll index_fasta(const std::string &fasta_file,
     // destroy seq and fp objects
     kseq_destroy(seq);
     gzclose(fp);
+
+    // Convert all to uppercase
+    for (char &c : reference_seq) {
+      c = ascii_toupper_char(c);
+    }
+
     sdsl::construct_im(ref_index, reference_seq, 1); // generate index
     if (write_idx) {
       store_to_file(ref_index, idx_file_name); // save it
@@ -47,7 +61,12 @@ fm_index_coll index_fasta(const std::string &fasta_file,
 }
 
 // search for a specific sequence within an fm index array
-bool seq_search(const std::string &query, const fm_index_coll &ref_idx) {
+bool seq_search(std::string &query, const fm_index_coll &ref_idx) {
+  // Convert query to uppercase
+  for (char &c : query) {
+    c = ascii_toupper_char(c);
+  }
+
   bool present = false;
   // count number of occurrences in positive strand
   size_t query_count = sdsl::count(ref_idx, query.begin(), query.end());
@@ -65,7 +84,7 @@ bool seq_search(const std::string &query, const fm_index_coll &ref_idx) {
 
 void call_strings(const std::vector<std::string> &assembly_list,
                   const std::vector<std::string> &assembly_names,
-                  const std::vector<std::string> &query_list,
+                  std::vector<std::string> &query_list,
                   const std::string &output_file, const bool write_idx,
                   const size_t num_threads) {
   // Read all sequences into memory as Fasta objects (threaded)
