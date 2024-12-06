@@ -48,7 +48,7 @@ fm_index_coll index_fasta(const std::string &fasta_file,
     gzclose(fp);
 
     // Convert all to uppercase
-    for (char &c : reference_seq.back()) {
+    for (char &c : reference_seq) {
       c = ascii_toupper_char(c);
     }
 
@@ -63,7 +63,7 @@ fm_index_coll index_fasta(const std::string &fasta_file,
 // search for a specific sequence within an fm index array
 bool seq_search(const std::string &query, const fm_index_coll &ref_idx) {
   // Convert query to uppercase
-  for (char &c : query.back()) {
+  for (char &c : query) {
     c = ascii_toupper_char(c);
   }
 
