@@ -43,7 +43,7 @@ typedef std::pair<std::unordered_map<std::string, std::vector<bool>>, std::vecto
 // map_strings.cpp
 void call_strings(const std::vector<std::string>& assembly_list,
                   const std::vector<std::string>& assembly_names,
-                  const std::vector<std::string>& query_list,
+                  std::vector<std::string>& query_list,
                   const std::string& output_file,
                   const bool write_idx = 1,
                   const size_t num_threads = 1);
