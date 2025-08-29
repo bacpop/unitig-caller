@@ -148,8 +148,14 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 }
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours)
+void query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours, const std::string& out_path)
 {
+    // open output file
+    std::ofstream out(out_path);
+    if (!out.is_open()) {
+        throw std::runtime_error("Unable to open output file: " + out_path);
+    }
+    
     //split query into sequence of kmers
     const char *query_str = query.c_str();
 
@@ -213,17 +219,22 @@ std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& q
         }
     }
 
-    return query_colours;
+    // write: query sequence + bitstring
+    out << query << "\t";
+    for (bool b : query_colours) {
+        out << (b ? '1' : '0');
+    }
+    out << "\n";
 }
 
 // call unitigs and return their colours within a graph
-std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDBG<>& ccdbg)
+void call_unitigs(const ColoredCDBG<>& ccdbg, const std::string& out_path)
 {
-    // initialise unitig map to return
-    std::unordered_map<std::string, std::vector<bool>> unitig_map;
-
-//    // get kmer size
-//    const int kmer = ccdbg.getK();
+    // open output file
+    std::ofstream out(out_path);
+    if (!out.is_open()) {
+        throw std::runtime_error("Unable to open output file: " + out_path);
+    }
 
     // get the number of colours
     const size_t nb_colours = ccdbg.getNbColors();
@@ -241,16 +252,18 @@ std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDB
         std::vector<bool> um_colours;
         if (um_colours_head != um_colours_tail) {
             um_colours = std::move(negate_colours_array(um_colours_head, um_colours_tail));
-        } else{
-            um_colours = std::move (um_colours_head);
+        } else {
+            um_colours = std::move(um_colours_head);
         }
 
-        // generate string for unitig
+        // unitig sequence
         std::string um_seq = um.referenceUnitigToString();
 
-        // append to unitig_map
-        unitig_map.insert(std::make_pair(um_seq, um_colours));
+        // write to file as: sequence\tbitstring\n
+        out << um_seq << "\t";
+        for (bool b : um_colours) {
+            out << (b ? '1' : '0');
+        }
+        out << "\n";
     }
-
-    return unitig_map;
 }

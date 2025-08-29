@@ -8,42 +8,48 @@ import subprocess
 import re
 import tempfile
 
-def rtab_format(unitig_map, input_colour_pref, outfile):
+def rtab_format(csv_tmp, input_colour_pref, outfile):
     """Creates RTAB file.
 
     Args:
-        unitig_map (dictionary)
-            dictionary mapping each unitig to a binary colour vector.
+        csv_tmp (filename)
+            csv mapping each unitig to a binary colour vector.
         input_colour_pref (list)
             list of input colour file prefixs.
         outfile (str)
             output prefix for pyseer file
     """
-    with open(outfile, "w") as o:
+    with open(outfile, "w") as o, open(csv_tmp, "r") as i:
         o.write("Unitig_sequence")
         for colour_name in input_colour_pref:
             o.write("\t" + colour_name)
         o.write("\n")
-        for unitig, colours_vector in unitig_map.items():
+        for line in i:
+            split_line = line.rstrip().split(",")
+            unitig = split_line[0]
+            colours_vector = split_line[1:]
             o.write(unitig)
             for colour in colours_vector:
                 colour = int(colour == True)
                 o.write("\t" + str(colour))
             o.write("\n")
 
-def pyseer_format(unitig_map, input_colour_pref, outfile):
+def pyseer_format(csv_tmp, input_colour_pref, outfile):
     """Creates pyseer file.
 
     Args:
-        unitig_map (dictionary)
-            dictionary mapping each unitig to a binary colour vector.
+        csv_tmp (filename)
+            csv mapping each unitig to a binary colour vector.
         input_colour_pref (list)
             list of input colour file prefixs.
         outfile (str)
             output prefix for pyseer file
     """
-    with open(outfile, "w") as o:
-        for unitig, colours_vector in unitig_map.items():
+    with open(outfile, "w") as o, open(csv_tmp, "r") as i:
+        for line in i:
+            split_line = line.rstrip().split(",")
+            unitig = split_line[0]
+            colours_vector = split_line[1:]
             o.write(unitig + " " + "|")
             for index, colour in enumerate(colours_vector):
                 if colour:

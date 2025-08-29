@@ -29,9 +29,10 @@ int py_call_strings(std::vector<std::string> assembly_list,
   return 1;
 }
 
-ReturnPair py_uc_exists(const std::string &graphfile,
-                        const std::string &coloursfile, const bool call,
-                        const std::string &query_file, size_t num_threads) {
+std::vector<std::string> py_uc_exists(const std::string &graphfile,
+                          const std::string &coloursfile, const bool call,
+                          const std::string &query_file, const std::string &tmp_file,
+                          size_t num_threads) {
   // Set number of threads
   if (num_threads < 1) {
     num_threads = 1;
@@ -50,11 +51,11 @@ ReturnPair py_uc_exists(const std::string &graphfile,
 
   // generate file prefixes for colours
   for (const auto &file : input_colour_files) {
-#ifdef FS_EXP
+  #ifdef FS_EXP
     std::experimental::filesystem::path p(file);
-#else
+  #else
     std::filesystem::path p(file);
-#endif
+  #endif
     input_colour_pref.push_back(p.stem());
   }
 
@@ -65,7 +66,7 @@ ReturnPair py_uc_exists(const std::string &graphfile,
 
   if (call) {
     cout << "Calling unitigs within population..." << endl;
-    unitig_map = call_unitigs(ccdbg);
+    call_unitigs(ccdbg, tmp_file);
   } else {
     cout << "Querying unitigs within population..." << endl;
 
@@ -73,21 +74,16 @@ ReturnPair py_uc_exists(const std::string &graphfile,
 
     for (const auto &query : query_list) {
       // run query of colours
-      std::vector<bool> query_colours = query_unitig(ccdbg, query, nb_colours);
+      query_unitig(ccdbg, query, nb_colours, tmp_file);
 
-      // Add colours to map. If unitig not found, query colours will be empty
-      unitig_map[query] = std::move(query_colours);
     }
   }
-
-  const ReturnPair return_pair = std::make_pair(unitig_map, input_colour_pref);
-
-  return return_pair;
 }
 
-ReturnPair py_uc_build(const std::string &infile1, const int &kmer,
+std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer,
                        const bool call, const std::string &query_file,
-                       size_t num_threads, bool is_ref, const bool write_graph,
+                       size_t num_threads, bool is_ref, const bool write_graph, 
+                       const std::string &tmp_file,
                        const std::string &infile2) {
   // Set number of threads
   if (num_threads < 1) {
@@ -128,7 +124,7 @@ ReturnPair py_uc_build(const std::string &infile1, const int &kmer,
 
   if (call) {
     cout << "Calling unitigs within population..." << endl;
-    unitig_map = call_unitigs(ccdbg);
+    call_unitigs(ccdbg, tmp_file);
   } else {
     cout << "Querying unitigs within population..." << endl;
 
@@ -136,16 +132,11 @@ ReturnPair py_uc_build(const std::string &infile1, const int &kmer,
 
     for (const auto &query : query_list) {
       // run query of colours
-      std::vector<bool> query_colours = query_unitig(ccdbg, query, nb_colours);
-
-      // Add colours to map. If unitig not found, query colours will be empty
-      unitig_map[query] = std::move(query_colours);
+      query_unitig(ccdbg, query, nb_colours, tmp_file);
     }
   }
 
-  const ReturnPair return_pair = std::make_pair(unitig_map, input_colour_pref);
-
-  return return_pair;
+  return input_colour_pref;
 }
 
 PYBIND11_MODULE(unitig_query, m) {
@@ -159,13 +150,14 @@ PYBIND11_MODULE(unitig_query, m) {
   m.def("call_unitigs_existing", &py_uc_exists,
         "Call/queries unitigs and their colours in an existing Bifrost graph",
         py::arg("graphfile"), py::arg("coloursfile"), py::arg("call"),
-        py::arg("query_file"), py::arg("num_threads") = 1);
+        py::arg("query_file"), py::arg("tmp_file"), py::arg("num_threads") = 1);
 
   m.def("call_unitigs_build", &py_uc_build,
         "Builds and then calls/queries unitigs in Bifrost graph",
         py::arg("infile1"), py::arg("kmer"), py::arg("call"),
         py::arg("query_file"), py::arg("num_threads") = 1,
         py::arg("is_ref") = 1, py::arg("write_graph") = 0,
+        py::arg("tmp_file"),
         py::arg("infile2") = "NA");
 
   m.attr("version") = VERSION_INFO;
