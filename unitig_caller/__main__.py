@@ -98,38 +98,38 @@ def get_options():
 def main():
     options = get_options()
 
-    csv_tmp = options.out + "_tmp.csv"
+    tmp_file = options.out + "_tmp.txt"
 
     if options.call or options.query:
         if options.call and options.graph != None and options.colours != None and options.refs == None and options.reads == None:
             # Read input1 (and input2 if specified) as reads.txt or refs.txt. Call `Bifrost build`
 
             sys.stderr.write("Calling unitigs within input genomes...\n")
-            input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, True, "NA", csv_tmp, options.threads)
+            input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, True, "NA", tmp_file, options.threads)
 
         elif options.call and (options.refs != None or options.reads != None) and options.graph == None and options.colours == None:
 
             sys.stderr.write("Building a DBG and calling unitigs within...\n")
             if options.refs != None and options.reads == None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, True, options.write_graph, csv_tmp)
+                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, True, options.write_graph, tmp_file)
             elif options.refs == None and options.reads != None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, True, "NA", options.threads, False, options.write_graph, csv_tmp)
+                input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, True, "NA", options.threads, False, options.write_graph, tmp_file)
             elif options.refs != None and options.reads != None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, False, options.write_graph, csv_tmp, options.reads)
+                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, True, "NA", options.threads, False, options.write_graph, tmp_file, options.reads)
 
         elif options.query and options.graph != None and options.colours != None and options.unitigs != None and options.refs == None and options.reads == None:
 
             sys.stderr.write("Querying unitigs within existing DBG...\n")
-            input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, False, options.unitigs, options.threads, csv_tmp)
+            input_colour_pref = unitig_query.call_unitigs_existing(options.graph, options.colours, False, options.unitigs, options.threads, tmp_file)
 
         elif options.query and (options.refs != None or options.reads != None) and options.unitigs != None and options.graph == None and options.colours == None:
             sys.stderr.write("Building a DBG and querying unitigs within...\n")
             if options.refs != None and options.reads == None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, True, options.write_graph, csv_tmp)
+                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, True, options.write_graph, tmp_file)
             elif options.refs == None and options.reads != None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, False, options.unitigs, options.threads, False, options.write_graph, csv_tmp)
+                input_colour_pref = unitig_query.call_unitigs_build(options.reads, options.kmer, False, options.unitigs, options.threads, False, options.write_graph, tmp_file)
             elif options.refs != None and options.reads != None:
-                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, False, options.write_graph, csv_tmp, options.reads)
+                input_colour_pref = unitig_query.call_unitigs_build(options.refs, options.kmer, False, options.unitigs, options.threads, False, options.write_graph, tmp_file, options.reads)
 
         else:
             print("Error: incorrect number of input files specified. Please only specify the below combinations:\n"
@@ -144,14 +144,14 @@ def main():
 
         if options.pyseer or (not options.pyseer and not options.rtab):
             sys.stderr.write("Generating pyseer file...\n")
-            pyseer_format(csv_tmp, input_colour_pref, options.out + ".pyseer")
+            pyseer_format(tmp_file, input_colour_pref, options.out + ".pyseer")
 
         if options.rtab:
             sys.stderr.write("Generating rtab file...\n")
-            rtab_format(csv_tmp, input_colour_pref, options.out + ".rtab")
+            rtab_format(tmp_file, input_colour_pref, options.out + ".rtab")
 
-        if os.path.exists(csv_tmp):
-            os.remove(csv_tmp)
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
 
     elif options.simple:
         # Read input into lists, as in 'index' and 'call'
