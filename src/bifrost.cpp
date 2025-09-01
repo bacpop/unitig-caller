@@ -252,10 +252,10 @@ void query_unitig (const ColoredCDBG<>& ccdbg,
 
         // --- Pyseer output ---
         if (pyseer) {
-            pyseer_out << query << "\t";
-            for (size_t i = 0; query_colours.size(); i++){
+            pyseer_out << query;
+            for (size_t i = 0; i < query_colours.size(); i++){
                 if (query_colours[i] == 1) {
-                    pyseer_out << input_colour_pref[i] + ":1";
+                    pyseer_out << "\t" << input_colour_pref[i] + ":1";
                 }
             }
             pyseer_out << "\n";
@@ -317,7 +317,6 @@ void call_unitigs(const ColoredCDBG<>& ccdbg,
         // unitig sequence
         std::string um_seq = um.referenceUnitigToString();
 
-        
         // --- RTAB output ---
         if (rtab) {
             rtab_out << um_seq;
@@ -329,10 +328,10 @@ void call_unitigs(const ColoredCDBG<>& ccdbg,
 
         // --- Pyseer output ---
         if (pyseer) {
-            pyseer_out << um_seq << "\t";
-            for (size_t i = 0; um_colours.size(); i++){
+            pyseer_out << um_seq;
+            for (size_t i = 0; i < um_colours.size(); i++){
                 if (um_colours[i] == 1) {
-                    pyseer_out << input_colour_pref[i] + ":1";
+                    pyseer_out << "\t" << input_colour_pref[i] + ":1";
                 }
             }
             pyseer_out << "\n";

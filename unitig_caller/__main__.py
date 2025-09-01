@@ -98,8 +98,6 @@ def get_options():
 def main():
     options = get_options()
 
-    options.out = options.out + "_tmp.txt"
-
     # ensure at least one output generated
     if not options.pyseer and not options.rtab:
         options.pyseer = True
