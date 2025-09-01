@@ -72,11 +72,7 @@ std::vector<std::string> py_uc_exists(const std::string &graphfile,
 
     std::vector<std::string> query_list = parse_fasta(query_file);
 
-    for (const auto &query : query_list) {
-      // run query of colours
-      query_unitig(ccdbg, query, nb_colours, tmp_file);
-
-    }
+    query_unitig(ccdbg, query_list, nb_colours, tmp_file);
   }
 }
 
@@ -130,10 +126,7 @@ std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer
 
     std::vector<std::string> query_list = parse_fasta(query_file);
 
-    for (const auto &query : query_list) {
-      // run query of colours
-      query_unitig(ccdbg, query, nb_colours, tmp_file);
-    }
+    query_unitig(ccdbg, query_list, nb_colours, tmp_file);
   }
 
   return input_colour_pref;

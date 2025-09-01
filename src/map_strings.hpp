@@ -73,7 +73,7 @@ std::vector<bool> negate_colours_array(const std::vector<bool>& array1, const st
 std::vector<std::string> parse_fasta (const std::string& fasta);
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-void query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours, const std::string& out_path);
+void query_unitig (const ColoredCDBG<>& ccdbg, const std::vector<std::string>& query_list, const size_t& nb_colours, const std::string& out_path);
 
 // call unitigs and return their colours within a graph
 void call_unitigs(const ColoredCDBG<>& ccdbg, const std::string& out_path);

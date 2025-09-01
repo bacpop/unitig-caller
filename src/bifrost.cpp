@@ -148,83 +148,82 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 }
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-void query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours, const std::string& out_path)
+void query_unitig (const ColoredCDBG<>& ccdbg, const std::vector<std::string>& query_list, const size_t& nb_colours, const std::string& out_path)
 {
     // open output file
     std::ofstream out(out_path);
     if (!out.is_open()) {
         throw std::runtime_error("Unable to open output file: " + out_path);
     }
-    
-    //split query into sequence of kmers
-    const char *query_str = query.c_str();
 
-    // find first kmer within query in graph
-    KmerIterator it_km(query_str), it_km_end;
-
-    // query the kmer in the graph, find the first unitig
-    auto unitig_current = ccdbg.find(it_km->first);
-
-    // make a const copy of the first unitig map to enable colour generation
-    const auto unitig_first = unitig_current;
-
-    // get the colours for the unitig
-    std::vector<bool> query_colours(nb_colours, 0);
-    std::vector<bool> query_colours_head;
-    std::vector<bool> query_colours_tail;
-
-//    // initialise check if kmer is first or last in sequence
-//    bool is_first = true;
-//    bool is_last = false;
-
-    // initialise unitig_found check
-    bool unitig_present = true;
-
-    // iterate to next kmer iterator
-    it_km++;
-
-    // iterate over forward strand of unitig
-    if (!unitig_current.isEmpty)
+    for (const auto& query : query_list)
     {
-        for (it_km; it_km != it_km_end; it_km++)
+        //split query into sequence of kmers
+        const char *query_str = query.c_str();
+
+        // find first kmer within query in graph
+        KmerIterator it_km(query_str), it_km_end;
+
+        // query the kmer in the graph, find the first unitig
+        auto unitig_current = ccdbg.find(it_km->first);
+
+        // make a const copy of the first unitig map to enable colour generation
+        const auto unitig_first = unitig_current;
+
+        // get the colours for the unitig
+        std::vector<bool> query_colours(nb_colours, 0);
+        std::vector<bool> query_colours_head;
+        std::vector<bool> query_colours_tail;
+
+        // initialise unitig_found check
+        bool unitig_present = true;
+
+        // iterate to next kmer iterator
+        it_km++;
+
+        // iterate over forward strand of unitig
+        if (!unitig_current.isEmpty)
         {
-            // query the kmer in the graph
-            auto unitig_current = ccdbg.find(it_km->first);
-
-            // check if unitig_current is true, if not then break and set unitig_present to false
-            if (unitig_current.isEmpty)
+            for (it_km; it_km != it_km_end; it_km++)
             {
-                unitig_present = false;
-                break;
+                // query the kmer in the graph
+                auto unitig_current = ccdbg.find(it_km->first);
+
+                // check if unitig_current is true, if not then break and set unitig_present to false
+                if (unitig_current.isEmpty)
+                {
+                    unitig_present = false;
+                    break;
+                }
+
+                // else, continue, the next iteration unitig_current will be set
             }
-
-            // else, continue, the next iteration unitig_current will be set
+        } else {
+            unitig_present = false;
         }
-    } else {
-        unitig_present = false;
-    }
 
-    // if unitig not present, clear the colours
-    if (unitig_present)
-    {
-        // get head and tail colours
-        query_colours_head = generate_colours(unitig_first, nb_colours, 0, true);
-        query_colours_tail = generate_colours(unitig_current, nb_colours, 0, true);
+        // if unitig not present, clear the colours
+        if (unitig_present)
+        {
+            // get head and tail colours
+            query_colours_head = generate_colours(unitig_first, nb_colours, 0, true);
+            query_colours_tail = generate_colours(unitig_current, nb_colours, 0, true);
 
-        // if colours are not the same, negate head and tail colours
-        if (query_colours_head != query_colours_tail) {
-            query_colours = std::move(negate_colours_array(query_colours_head, query_colours_tail));
-        } else{
-            query_colours = std::move(query_colours_head);
+            // if colours are not the same, negate head and tail colours
+            if (query_colours_head != query_colours_tail) {
+                query_colours = std::move(negate_colours_array(query_colours_head, query_colours_tail));
+            } else{
+                query_colours = std::move(query_colours_head);
+            }
         }
-    }
 
-    // write: query sequence + bitstring
-    out << query << "\t";
-    for (bool b : query_colours) {
-        out << (b ? '1' : '0');
+        // write: query sequence + bitstring
+        out << query << "\t";
+        for (bool b : query_colours) {
+            out << (b ? '1' : '0');
+        }
+        out << "\n";
     }
-    out << "\n";
 }
 
 // call unitigs and return their colours within a graph
