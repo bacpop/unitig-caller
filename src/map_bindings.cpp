@@ -32,7 +32,7 @@ int py_call_strings(std::vector<std::string> assembly_list,
 std::vector<std::string> py_uc_exists(const std::string &graphfile,
                           const std::string &coloursfile, const bool call,
                           const std::string &query_file, const std::string &outpref,
-                          size_t num_threads, bool rtab, bool pyseer) {
+                          bool rtab, bool pyseer, size_t num_threads) {
   // Set number of threads
   if (num_threads < 1) {
     num_threads = 1;
@@ -143,8 +143,8 @@ PYBIND11_MODULE(unitig_query, m) {
   m.def("call_unitigs_existing", &py_uc_exists,
         "Call/queries unitigs and their colours in an existing Bifrost graph",
         py::arg("graphfile"), py::arg("coloursfile"), py::arg("call"),
-        py::arg("query_file"), py::arg("outpref"), py::arg("num_threads") = 1,
-        py::arg("rtab"), py::arg("pyseer"));
+        py::arg("query_file"), py::arg("outpref"), py::arg("rtab"), py::arg("pyseer"),
+        py::arg("num_threads") = 1);
 
   m.def("call_unitigs_build", &py_uc_build,
         "Builds and then calls/queries unitigs in Bifrost graph",

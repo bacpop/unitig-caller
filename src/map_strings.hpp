@@ -99,7 +99,7 @@ int py_call_strings(std::vector<std::string> assembly_list,
 std::vector<std::string> py_uc_exists(const std::string &graphfile,
                           const std::string &coloursfile, const bool call,
                           const std::string &query_file, const std::string &outpref,
-                          size_t num_threads, bool rtab, bool pyseer) ;
+                          bool rtab, bool pyseer, size_t num_threads);
 
 std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer,
                        const bool call, const std::string &query_file,
