@@ -12,9 +12,6 @@ import unitig_query
 
 from .__init__ import __version__
 
-from .bifrost import rtab_format
-from .bifrost import pyseer_format
-
 def get_options():
     import argparse
 
