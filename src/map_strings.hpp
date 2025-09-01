@@ -73,10 +73,20 @@ std::vector<bool> negate_colours_array(const std::vector<bool>& array1, const st
 std::vector<std::string> parse_fasta (const std::string& fasta);
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-void query_unitig (const ColoredCDBG<>& ccdbg, const std::vector<std::string>& query_list, const size_t& nb_colours, const std::string& out_path);
+void query_unitig (const ColoredCDBG<>& ccdbg, 
+                    const std::vector<std::string>& query_list, 
+                    const size_t& nb_colours, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer);
 
 // call unitigs and return their colours within a graph
-void call_unitigs(const ColoredCDBG<>& ccdbg, const std::string& out_path);
+void call_unitigs(const ColoredCDBG<>& ccdbg, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer);
 
 // map_bindings.cpp
 int py_call_strings(std::vector<std::string> assembly_list,
@@ -88,11 +98,11 @@ int py_call_strings(std::vector<std::string> assembly_list,
 
 std::vector<std::string> py_uc_exists(const std::string &graphfile,
                           const std::string &coloursfile, const bool call,
-                          const std::string &query_file, const std::string &tmp_file,
-                          size_t num_threads) ;
+                          const std::string &query_file, const std::string &outpref,
+                          size_t num_threads, bool rtab, bool pyseer) ;
 
 std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer,
                        const bool call, const std::string &query_file,
                        size_t num_threads, bool is_ref, const bool write_graph, 
-                       const std::string &tmp_file,
-                       const std::string &infile2);
+                       const std::string &outpref, bool rtab, bool pyseer,
+                       const std::string &infile2) ;

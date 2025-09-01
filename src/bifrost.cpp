@@ -148,12 +148,36 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 }
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-void query_unitig (const ColoredCDBG<>& ccdbg, const std::vector<std::string>& query_list, const size_t& nb_colours, const std::string& out_path)
+void query_unitig (const ColoredCDBG<>& ccdbg, 
+                    const std::vector<std::string>& query_list, 
+                    const size_t& nb_colours, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer)
 {
-    // open output file
-    std::ofstream out(out_path);
-    if (!out.is_open()) {
-        throw std::runtime_error("Unable to open output file: " + out_path);
+    // open files if needed
+    std::ofstream rtab_out;
+    const std::string rtab_path = out_path + ".rtab";
+    if (rtab) {
+        rtab_out.open(rtab_path);
+        if (!rtab_out.is_open())
+            throw std::runtime_error("Unable to open RTAB file: " + rtab_path);
+
+        // header for RTAB
+        rtab_out << "Unitig_sequence";
+        for (const auto& name : input_colour_pref) {
+            rtab_out << "\t" << name;
+        }
+        rtab_out << "\n";
+    }
+
+    std::ofstream pyseer_out;
+    const std::string pyseer_path = out_path + ".pyseer";
+    if (pyseer) {
+        pyseer_out.open(pyseer_path);
+        if (!pyseer_out.is_open())
+            throw std::runtime_error("Unable to open Pyseer file: " + pyseer_path);
     }
 
     for (const auto& query : query_list)
@@ -217,22 +241,57 @@ void query_unitig (const ColoredCDBG<>& ccdbg, const std::vector<std::string>& q
             }
         }
 
-        // write: query sequence + bitstring
-        out << query << "\t";
-        for (bool b : query_colours) {
-            out << (b ? '1' : '0');
+        // --- RTAB output ---
+        if (rtab) {
+            rtab_out << query;
+            for (bool b : query_colours) {
+                rtab_out << "\t" << (b ? "1" : "0");
+            }
+            rtab_out << "\n";
         }
-        out << "\n";
+
+        // --- Pyseer output ---
+        if (pyseer) {
+            pyseer_out << query << "\t";
+            for (size_t i = 0; query_colours.size(); i++){
+                if (query_colours[i] == 1) {
+                    pyseer_out << input_colour_pref[i] + ":1";
+                }
+            }
+            pyseer_out << "\n";
+        }
     }
 }
 
 // call unitigs and return their colours within a graph
-void call_unitigs(const ColoredCDBG<>& ccdbg, const std::string& out_path)
+void call_unitigs(const ColoredCDBG<>& ccdbg, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer)
 {
-    // open output file
-    std::ofstream out(out_path);
-    if (!out.is_open()) {
-        throw std::runtime_error("Unable to open output file: " + out_path);
+    // open files if needed
+    std::ofstream rtab_out;
+    const std::string rtab_path = out_path + ".rtab";
+    if (rtab) {
+        rtab_out.open(rtab_path);
+        if (!rtab_out.is_open())
+            throw std::runtime_error("Unable to open RTAB file: " + rtab_path);
+
+        // header for RTAB
+        rtab_out << "Unitig_sequence";
+        for (const auto& name : input_colour_pref) {
+            rtab_out << "\t" << name;
+        }
+        rtab_out << "\n";
+    }
+
+    std::ofstream pyseer_out;
+    const std::string pyseer_path = out_path + ".pyseer";
+    if (pyseer) {
+        pyseer_out.open(pyseer_path);
+        if (!pyseer_out.is_open())
+            throw std::runtime_error("Unable to open Pyseer file: " + pyseer_path);
     }
 
     // get the number of colours
@@ -258,11 +317,25 @@ void call_unitigs(const ColoredCDBG<>& ccdbg, const std::string& out_path)
         // unitig sequence
         std::string um_seq = um.referenceUnitigToString();
 
-        // write to file as: sequence\tbitstring\n
-        out << um_seq << "\t";
-        for (bool b : um_colours) {
-            out << (b ? '1' : '0');
+        
+        // --- RTAB output ---
+        if (rtab) {
+            rtab_out << um_seq;
+            for (bool b : um_colours) {
+                rtab_out << "\t" << (b ? "1" : "0");
+            }
+            rtab_out << "\n";
         }
-        out << "\n";
+
+        // --- Pyseer output ---
+        if (pyseer) {
+            pyseer_out << um_seq << "\t";
+            for (size_t i = 0; um_colours.size(); i++){
+                if (um_colours[i] == 1) {
+                    pyseer_out << input_colour_pref[i] + ":1";
+                }
+            }
+            pyseer_out << "\n";
+        }
     }
 }

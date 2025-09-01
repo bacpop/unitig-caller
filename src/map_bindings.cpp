@@ -31,8 +31,8 @@ int py_call_strings(std::vector<std::string> assembly_list,
 
 std::vector<std::string> py_uc_exists(const std::string &graphfile,
                           const std::string &coloursfile, const bool call,
-                          const std::string &query_file, const std::string &tmp_file,
-                          size_t num_threads) {
+                          const std::string &query_file, const std::string &outpref,
+                          size_t num_threads, bool rtab, bool pyseer) {
   // Set number of threads
   if (num_threads < 1) {
     num_threads = 1;
@@ -66,20 +66,20 @@ std::vector<std::string> py_uc_exists(const std::string &graphfile,
 
   if (call) {
     cout << "Calling unitigs within population..." << endl;
-    call_unitigs(ccdbg, tmp_file);
+    call_unitigs(ccdbg, outpref, input_colour_pref, rtab, pyseer);
   } else {
     cout << "Querying unitigs within population..." << endl;
 
     std::vector<std::string> query_list = parse_fasta(query_file);
 
-    query_unitig(ccdbg, query_list, nb_colours, tmp_file);
+    query_unitig(ccdbg, query_list, nb_colours, outpref, input_colour_pref, rtab, pyseer);
   }
 }
 
 std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer,
                        const bool call, const std::string &query_file,
                        size_t num_threads, bool is_ref, const bool write_graph, 
-                       const std::string &tmp_file,
+                       const std::string &outpref, bool rtab, bool pyseer,
                        const std::string &infile2) {
   // Set number of threads
   if (num_threads < 1) {
@@ -120,13 +120,13 @@ std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer
 
   if (call) {
     cout << "Calling unitigs within population..." << endl;
-    call_unitigs(ccdbg, tmp_file);
+    call_unitigs(ccdbg, outpref, input_colour_pref, rtab, pyseer);
   } else {
     cout << "Querying unitigs within population..." << endl;
 
     std::vector<std::string> query_list = parse_fasta(query_file);
 
-    query_unitig(ccdbg, query_list, nb_colours, tmp_file);
+    query_unitig(ccdbg, query_list, nb_colours, outpref, input_colour_pref, rtab, pyseer);
   }
 
   return input_colour_pref;
@@ -143,14 +143,15 @@ PYBIND11_MODULE(unitig_query, m) {
   m.def("call_unitigs_existing", &py_uc_exists,
         "Call/queries unitigs and their colours in an existing Bifrost graph",
         py::arg("graphfile"), py::arg("coloursfile"), py::arg("call"),
-        py::arg("query_file"), py::arg("tmp_file"), py::arg("num_threads") = 1);
+        py::arg("query_file"), py::arg("outpref"), py::arg("num_threads") = 1,
+        py::arg("rtab"), py::arg("pyseer"));
 
   m.def("call_unitigs_build", &py_uc_build,
         "Builds and then calls/queries unitigs in Bifrost graph",
         py::arg("infile1"), py::arg("kmer"), py::arg("call"),
         py::arg("query_file"), py::arg("num_threads") = 1,
         py::arg("is_ref") = 1, py::arg("write_graph") = 0,
-        py::arg("tmp_file"),
+        py::arg("outpref"), py::arg("rtab"), py::arg("pyseer"),
         py::arg("infile2") = "NA");
 
   m.attr("version") = VERSION_INFO;
