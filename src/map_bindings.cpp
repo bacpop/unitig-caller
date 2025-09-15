@@ -51,11 +51,11 @@ std::vector<std::string> py_uc_exists(const std::string &graphfile,
 
   // generate file prefixes for colours
   for (const auto &file : input_colour_files) {
-  #ifdef FS_EXP
+    #ifdef FS_EXP
     std::experimental::filesystem::path p(file);
-  #else
+    #else
     std::filesystem::path p(file);
-  #endif
+    #endif
     input_colour_pref.push_back(p.stem());
   }
 
@@ -105,11 +105,11 @@ std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer
 
   // generate file prefixes for colours
   for (const auto &file : input_colour_files) {
-#ifdef FS_EXP
+  #ifdef FS_EXP
     std::experimental::filesystem::path p(file);
-#else
+  #else
     std::filesystem::path p(file);
-#endif
+  #endif
     input_colour_pref.push_back(p.stem());
   }
 
