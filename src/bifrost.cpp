@@ -148,82 +148,151 @@ std::vector<std::string> parse_fasta (const std::string& fasta)
 }
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours)
+void query_unitig (const ColoredCDBG<>& ccdbg, 
+                    const std::vector<std::string>& query_list, 
+                    const size_t& nb_colours, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer)
 {
-    //split query into sequence of kmers
-    const char *query_str = query.c_str();
+    // open files if needed
+    std::ofstream rtab_out;
+    const std::string rtab_path = out_path + ".rtab";
+    if (rtab) {
+        rtab_out.open(rtab_path);
+        if (!rtab_out.is_open())
+            throw std::runtime_error("Unable to open RTAB file: " + rtab_path);
 
-    // find first kmer within query in graph
-    KmerIterator it_km(query_str), it_km_end;
+        // header for RTAB
+        rtab_out << "Unitig_sequence";
+        for (const auto& name : input_colour_pref) {
+            rtab_out << "\t" << name;
+        }
+        rtab_out << "\n";
+    }
 
-    // query the kmer in the graph, find the first unitig
-    auto unitig_current = ccdbg.find(it_km->first);
+    std::ofstream pyseer_out;
+    const std::string pyseer_path = out_path + ".pyseer";
+    if (pyseer) {
+        pyseer_out.open(pyseer_path);
+        if (!pyseer_out.is_open())
+            throw std::runtime_error("Unable to open Pyseer file: " + pyseer_path);
+    }
 
-    // make a const copy of the first unitig map to enable colour generation
-    const auto unitig_first = unitig_current;
-
-    // get the colours for the unitig
-    std::vector<bool> query_colours(nb_colours, 0);
-    std::vector<bool> query_colours_head;
-    std::vector<bool> query_colours_tail;
-
-//    // initialise check if kmer is first or last in sequence
-//    bool is_first = true;
-//    bool is_last = false;
-
-    // initialise unitig_found check
-    bool unitig_present = true;
-
-    // iterate to next kmer iterator
-    it_km++;
-
-    // iterate over forward strand of unitig
-    if (!unitig_current.isEmpty)
+    for (const auto& query : query_list)
     {
-        for (it_km; it_km != it_km_end; it_km++)
+        //split query into sequence of kmers
+        const char *query_str = query.c_str();
+
+        // find first kmer within query in graph
+        KmerIterator it_km(query_str), it_km_end;
+
+        // query the kmer in the graph, find the first unitig
+        auto unitig_current = ccdbg.find(it_km->first);
+
+        // make a const copy of the first unitig map to enable colour generation
+        const auto unitig_first = unitig_current;
+
+        // get the colours for the unitig
+        std::vector<bool> query_colours(nb_colours, 0);
+        std::vector<bool> query_colours_head;
+        std::vector<bool> query_colours_tail;
+
+        // initialise unitig_found check
+        bool unitig_present = true;
+
+        // iterate to next kmer iterator
+        it_km++;
+
+        // iterate over forward strand of unitig
+        if (!unitig_current.isEmpty)
         {
-            // query the kmer in the graph
-            auto unitig_current = ccdbg.find(it_km->first);
-
-            // check if unitig_current is true, if not then break and set unitig_present to false
-            if (unitig_current.isEmpty)
+            for (it_km; it_km != it_km_end; it_km++)
             {
-                unitig_present = false;
-                break;
+                // query the kmer in the graph
+                auto unitig_current = ccdbg.find(it_km->first);
+
+                // check if unitig_current is true, if not then break and set unitig_present to false
+                if (unitig_current.isEmpty)
+                {
+                    unitig_present = false;
+                    break;
+                }
+
+                // else, continue, the next iteration unitig_current will be set
             }
-
-            // else, continue, the next iteration unitig_current will be set
+        } else {
+            unitig_present = false;
         }
-    } else {
-        unitig_present = false;
-    }
 
-    // if unitig not present, clear the colours
-    if (unitig_present)
-    {
-        // get head and tail colours
-        query_colours_head = generate_colours(unitig_first, nb_colours, 0, true);
-        query_colours_tail = generate_colours(unitig_current, nb_colours, 0, true);
+        // if unitig not present, clear the colours
+        if (unitig_present)
+        {
+            // get head and tail colours
+            query_colours_head = generate_colours(unitig_first, nb_colours, 0, true);
+            query_colours_tail = generate_colours(unitig_current, nb_colours, 0, true);
 
-        // if colours are not the same, negate head and tail colours
-        if (query_colours_head != query_colours_tail) {
-            query_colours = std::move(negate_colours_array(query_colours_head, query_colours_tail));
-        } else{
-            query_colours = std::move(query_colours_head);
+            // if colours are not the same, negate head and tail colours
+            if (query_colours_head != query_colours_tail) {
+                query_colours = std::move(negate_colours_array(query_colours_head, query_colours_tail));
+            } else{
+                query_colours = std::move(query_colours_head);
+            }
+        }
+
+        // --- RTAB output ---
+        if (rtab) {
+            rtab_out << query;
+            for (bool b : query_colours) {
+                rtab_out << "\t" << (b ? "1" : "0");
+            }
+            rtab_out << "\n";
+        }
+
+        // --- Pyseer output ---
+        if (pyseer) {
+            pyseer_out << query + " |";
+            for (size_t i = 0; i < query_colours.size(); i++){
+                if (query_colours[i] == 1) {
+                    pyseer_out << " " << input_colour_pref[i] + ":1";
+                }
+            }
+            pyseer_out << "\n";
         }
     }
-
-    return query_colours;
 }
 
 // call unitigs and return their colours within a graph
-std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDBG<>& ccdbg)
+void call_unitigs(const ColoredCDBG<>& ccdbg, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer)
 {
-    // initialise unitig map to return
-    std::unordered_map<std::string, std::vector<bool>> unitig_map;
+    // open files if needed
+    std::ofstream rtab_out;
+    const std::string rtab_path = out_path + ".rtab";
+    if (rtab) {
+        rtab_out.open(rtab_path);
+        if (!rtab_out.is_open())
+            throw std::runtime_error("Unable to open RTAB file: " + rtab_path);
 
-//    // get kmer size
-//    const int kmer = ccdbg.getK();
+        // header for RTAB
+        rtab_out << "Unitig_sequence";
+        for (const auto& name : input_colour_pref) {
+            rtab_out << "\t" << name;
+        }
+        rtab_out << "\n";
+    }
+
+    std::ofstream pyseer_out;
+    const std::string pyseer_path = out_path + ".pyseer";
+    if (pyseer) {
+        pyseer_out.open(pyseer_path);
+        if (!pyseer_out.is_open())
+            throw std::runtime_error("Unable to open Pyseer file: " + pyseer_path);
+    }
 
     // get the number of colours
     const size_t nb_colours = ccdbg.getNbColors();
@@ -241,16 +310,31 @@ std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDB
         std::vector<bool> um_colours;
         if (um_colours_head != um_colours_tail) {
             um_colours = std::move(negate_colours_array(um_colours_head, um_colours_tail));
-        } else{
-            um_colours = std::move (um_colours_head);
+        } else {
+            um_colours = std::move(um_colours_head);
         }
 
-        // generate string for unitig
+        // unitig sequence
         std::string um_seq = um.referenceUnitigToString();
 
-        // append to unitig_map
-        unitig_map.insert(std::make_pair(um_seq, um_colours));
-    }
+        // --- RTAB output ---
+        if (rtab) {
+            rtab_out << um_seq;
+            for (bool b : um_colours) {
+                rtab_out << "\t" << (b ? "1" : "0");
+            }
+            rtab_out << "\n";
+        }
 
-    return unitig_map;
+        // --- Pyseer output ---
+        if (pyseer) {
+            pyseer_out << um_seq + " |";
+            for (size_t i = 0; i < um_colours.size(); i++){
+                if (um_colours[i] == 1) {
+                    pyseer_out << " " << input_colour_pref[i] + ":1";
+                }
+            }
+            pyseer_out << "\n";
+        }
+    }
 }

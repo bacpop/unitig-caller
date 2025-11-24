@@ -73,10 +73,20 @@ std::vector<bool> negate_colours_array(const std::vector<bool>& array1, const st
 std::vector<std::string> parse_fasta (const std::string& fasta);
 
 // query whether a unitig exists in a graph in it's entirity, if so return colour vector. If not, return empty vector.
-std::vector<bool> query_unitig (const ColoredCDBG<>& ccdbg, const std::string& query, const size_t& nb_colours);
+void query_unitig (const ColoredCDBG<>& ccdbg, 
+                    const std::vector<std::string>& query_list, 
+                    const size_t& nb_colours, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer);
 
 // call unitigs and return their colours within a graph
-std::unordered_map<std::string, std::vector<bool>> call_unitigs(const ColoredCDBG<>& ccdbg);
+void call_unitigs(const ColoredCDBG<>& ccdbg, 
+                    const std::string& out_path,
+                    const std::vector<std::string>& input_colour_pref,
+                    bool rtab,
+                    bool pyseer);
 
 // map_bindings.cpp
 int py_call_strings(std::vector<std::string> assembly_list,
@@ -86,17 +96,13 @@ int py_call_strings(std::vector<std::string> assembly_list,
                     bool write_idx = 1,
                     size_t num_threads = 1);
 
-ReturnPair py_uc_exists (const std::string& graphfile,
-                              const std::string& coloursfile,
-                              const bool call,
-                              const std::string& query_file,
-                              size_t num_threads);
+std::vector<std::string> py_uc_exists(const std::string &graphfile,
+                          const std::string &coloursfile, const bool call,
+                          const std::string &query_file, const std::string &outpref,
+                          bool rtab, bool pyseer, size_t num_threads);
 
-ReturnPair py_uc_build (const std::string& infile1,
-                        const int& kmer,
-                        const bool call,
-                        const std::string& query_file,
-                        size_t num_threads,
-                        bool is_ref,
-                        const bool write_graph,
-                        const std::string& infile2);
+std::vector<std::string> py_uc_build(const std::string &infile1, const int &kmer,
+                       const bool call, const std::string &query_file,
+                       size_t num_threads, bool is_ref, const bool write_graph, 
+                       const std::string &outpref, bool rtab, bool pyseer,
+                       const std::string &infile2) ;

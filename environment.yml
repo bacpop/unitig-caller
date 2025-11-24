@@ -2,7 +2,6 @@ name: unitig_caller_env
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - python
   - pip
@@ -12,3 +11,4 @@ dependencies:
   - bzip2
   - bifrost >=1.0.6
   - libgomp
+  - setuptools
